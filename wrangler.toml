@@ -11,14 +11,11 @@ binding = "ASSETS"
 run_worker_first = true
 not_found_handling = "404-page"
 
-# Database D1: creare una volta con
-#   npx wrangler d1 create feraspizza-db
-# e incollare qui il database_id restituito.
+# Database D1: creato automaticamente da Cloudflare al primo deploy
 # Tabelle e menu iniziale vengono creati da soli alla prima richiesta.
 [[d1_databases]]
 binding = "DB"
 database_name = "feraspizza-db"
-database_id = "INSERISCI-QUI-IL-DATABASE-ID"
 
 # Ritenta ogni 2 minuti le notifiche push non consegnate.
 [triggers]
@@ -27,9 +24,7 @@ crons = ["*/2 * * * *"]
 [observability]
 enabled = true
 
-# Secret da impostare (Workers → Settings → Variables and Secrets,
-# oppure `npx wrangler secret put NOME`):
-#   ADMIN_PASSWORD     password iniziale del pannello (utente FERAS)
-#   VAPID_PUBLIC_KEY   } generate con: node scripts/generate-vapid.mjs
-#   VAPID_PRIVATE_KEY  }
-#   VAPID_SUBJECT      es. mailto:email@dominio.it
+# Nessun secret obbligatorio:
+#  - chiavi notifiche (VAPID) generate e salvate in D1 al primo uso
+#  - password iniziale del pannello già impostata (hash in src/lib/auth.js)
+# Facoltativi: ADMIN_PASSWORD, VAPID_PUBLIC_KEY, VAPID_PRIVATE_KEY, VAPID_SUBJECT

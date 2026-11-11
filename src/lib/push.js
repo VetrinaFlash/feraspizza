@@ -35,6 +35,24 @@ const keyOk = (value, length, uncompressed = false) => {
 
 export const pushConfigured = (env) => keyOk(env.VAPID_PUBLIC_KEY, 65, true) && keyOk(env.VAPID_PRIVATE_KEY, 32);
 
+/**
+ * Chiavi VAPID: usa i secret se presenti, altrimenti le genera UNA volta e le salva in D1.
+ * Cambiarle invaliderebbe i dispositivi registrati, quindi non vengono mai rigenerate.
+ */
+export async function withVapid(env) {
+  if (pushConfigured(env)) return env;
+  let row = await env.DB.prepare("SELECT value FROM meta WHERE key='vapid'").first();
+  if (!row) {
+    const pair = await crypto.subtle.generateKey({ name: "ECDSA", namedCurve: "P-256" }, true, ["sign", "verify"]);
+    const jwk = await crypto.subtle.exportKey("jwk", pair.privateKey);
+    const pub = b64url(concat(Uint8Array.of(4), decode(jwk.x), decode(jwk.y)));
+    await env.DB.prepare("INSERT OR IGNORE INTO meta(key,value) VALUES('vapid',?)").bind(JSON.stringify({ pub, priv: jwk.d })).run();
+    row = await env.DB.prepare("SELECT value FROM meta WHERE key='vapid'").first();
+  }
+  const k = JSON.parse(row.value);
+  return { ...env, VAPID_PUBLIC_KEY: k.pub, VAPID_PRIVATE_KEY: k.priv };
+}
+
 export function allowedEndpoint(endpoint) {
   try {
     const u = new URL(endpoint);
@@ -77,7 +95,7 @@ export async function buildPushRequest(message, sub, env, now = Date.now()) {
   const header = b64url(enc.encode(JSON.stringify({ typ: "JWT", alg: "ES256" })));
   const claims = b64url(enc.encode(JSON.stringify({
     aud: new URL(sub.endpoint).origin, exp: Math.floor(now / 1000) + 12 * 3600,
-    sub: env.VAPID_SUBJECT || "mailto:admin@example.com",
+    sub: env.VAPID_SUBJECT || "mailto:info@example.com",
   })));
   const signed = header + "." + claims;
   const sig = new Uint8Array(await crypto.subtle.sign({ name: "ECDSA", hash: "SHA-256" }, signKey, enc.encode(signed)));
@@ -120,7 +138,7 @@ export async function enqueuePush(env, origin, { id, title, body, target }) {
 
 /** Invia gli eventi in coda (massimo 15 minuti di vita: un ordine vecchio non va più notificato). */
 export async function runPendingPush(env, { now = Date.now(), fetcher = fetch } = {}) {
-  if (!pushConfigured(env)) return { sent: 0, reason: "vapid_missing" };
+  env = await withVapid(env);
   const claimed = (await env.DB.prepare(`UPDATE push_events SET claim_until_ms=?,attempts=attempts+1
     WHERE id IN (SELECT id FROM push_events WHERE delivered_ms IS NULL AND next_attempt_ms<=? AND claim_until_ms<?
     AND created_ms>? ORDER BY created_ms LIMIT 10) RETURNING *`)
@@ -135,7 +153,8 @@ export async function runPendingPush(env, { now = Date.now(), fetcher = fetch } 
       if (done) continue;
       try {
         const { url, init } = await buildPushRequest(
-          { kind: "order", title: ev.title, body: ev.body, url: ev.target, eventId: ev.id }, sub, env, now);
+          { kind: "order", title: ev.title, body: ev.body, url: ev.target, eventId: ev.id }, sub,
+          { ...env, VAPID_SUBJECT: env.VAPID_SUBJECT || ev.origin }, now);
         const res = await fetcher(url, { ...init, signal: AbortSignal.timeout(6500) });
         if (res.status === 404 || res.status === 410) {
           await env.DB.prepare("UPDATE push_subscriptions SET active=0,last_error=? WHERE id=?").bind("scaduta " + res.status, sub.id).run();
@@ -161,7 +180,7 @@ export async function runPendingPush(env, { now = Date.now(), fetcher = fetch } 
 }
 
 export async function sendTest(env, origin, endpoint) {
-  if (!pushConfigured(env)) throw Error("Chiavi VAPID non configurate su Cloudflare");
+  env = { ...(await withVapid(env)), VAPID_SUBJECT: env.VAPID_SUBJECT || origin };
   if (!allowedEndpoint(endpoint)) throw Error("Dispositivo non valido");
   const sub = await env.DB.prepare("SELECT endpoint,p256dh,auth FROM push_subscriptions WHERE id=? AND active=1")
     .bind(await sha256(endpoint)).first();
@@ -176,6 +195,7 @@ export async function sendTest(env, origin, endpoint) {
 }
 
 export async function pushStatus(env, origin) {
+  env = await withVapid(env);
   const row = await env.DB.prepare("SELECT COUNT(*) AS n FROM push_subscriptions WHERE origin=? AND active=1").bind(origin).first();
   return {
     configured: pushConfigured(env),

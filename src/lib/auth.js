@@ -1,6 +1,9 @@
 import { HttpError, json, readJson, sha256, randomToken } from "./http.js";
 
 export const ADMIN_USER = "FERAS";
+// Hash della password iniziale (la password in chiaro NON è nel repository).
+// Si usa solo finché non esiste una password salvata in D1; poi si cambia dal pannello.
+const BOOTSTRAP_HASH = "pbkdf2-sha256$100000$522569a9ef8bd2a341b82f82a752e503$09fbdcd4dca151a3c8182cb5d7a2fbcbaec4bfc5d89b0e71b5026106c62aec51";
 const COOKIE = "__Host-feras_admin";
 const TTL_MS = 365 * 24 * 3600 * 1000; // dispositivo fidato: un anno, rinnovato con l'uso
 const RENEW_MS = 30 * 24 * 3600 * 1000;
@@ -83,9 +86,8 @@ export async function login(env, request) {
   let ok = false;
   if (row) ok = await verify(password, row.password_hash);
   else if (username === ADMIN_USER) {
-    // Primo accesso: password dal secret ADMIN_PASSWORD, poi salvata come hash.
-    if (!env.ADMIN_PASSWORD) throw new HttpError("Imposta il secret ADMIN_PASSWORD su Cloudflare prima del primo accesso.", 503);
-    ok = safeEqual(password, String(env.ADMIN_PASSWORD));
+    // Primo accesso: secret ADMIN_PASSWORD se impostato, altrimenti la password iniziale; poi salvata come hash in D1.
+    ok = env.ADMIN_PASSWORD ? safeEqual(password, String(env.ADMIN_PASSWORD)) : await verify(password, BOOTSTRAP_HASH);
     if (ok)
       await env.DB.prepare("INSERT OR IGNORE INTO admin_credentials(username,password_hash) VALUES(?,?)")
         .bind(ADMIN_USER, await hashPassword(password)).run();
