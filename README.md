@@ -27,33 +27,16 @@ Gira tutto su un unico **Cloudflare Worker** con asset statici + **D1**. Nessun 
 I prezzi sono **sempre ricalcolati sul server**: il browser invia solo prodotti e quantità.
 Pagamento: contanti o carta con POS al ritiro/consegna (nessun pagamento online).
 
-## Pubblicazione (prima volta)
+## Pubblicazione
 
-```bash
-npm install
-npx wrangler login
+Nessuna configurazione manuale: il Worker è collegato al repository e a ogni push su `main` Cloudflare ricompila e pubblica.
 
-# 1. Database
-npx wrangler d1 create feraspizza-db
-#    → copia il database_id in wrangler.toml
-
-# 2. Password del pannello (utente: FERAS)
-npx wrangler secret put ADMIN_PASSWORD
-
-# 3. Notifiche push (generare UNA volta, non cambiarle più)
-node scripts/generate-vapid.mjs
-npx wrangler secret put VAPID_PUBLIC_KEY
-npx wrangler secret put VAPID_PRIVATE_KEY
-npx wrangler secret put VAPID_SUBJECT      # es. mailto:tuaemail@gmail.com
-
-# 4. Pubblica
-npx wrangler deploy
-```
-
-Al primo accesso il Worker crea da solo le tabelle e carica il menu iniziale (preso da Glovo, novembre 2026: **verificare i prezzi**, quelli Glovo possono essere maggiorati).
-La password di `ADMIN_PASSWORD` serve solo per il primo accesso: viene salvata come hash e poi si cambia dal pannello.
-
-In alternativa ai comandi: Cloudflare → Workers → *Create* → *Import a repository* → `feraspizza`, poi impostare i secret in *Settings → Variables and Secrets* e collegare il database D1 con binding `DB`.
+- **D1**: `wrangler.toml` non contiene `database_id`, quindi Cloudflare crea `feraspizza-db` al primo deploy (provisioning automatico).
+- **Tabelle e menu**: creati dal Worker alla prima richiesta.
+- **Notifiche push**: le chiavi VAPID vengono generate al primo uso e salvate in D1. Non cancellare la riga `vapid` nella tabella `meta`, altrimenti i dispositivi vanno riattivati.
+- **Password pannello**: utente `FERAS`, password iniziale comunicata a parte (nel repo c'è solo l'hash). Cambiarla subito da Impostazioni.
+- **Secret facoltativi**: `ADMIN_PASSWORD` (sostituisce la password iniziale finché non ne viene salvata una dal pannello), `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/`VAPID_SUBJECT`.
+- **Immagini prodotti**: salvate in D1, non serve R2.
 
 Dominio: Workers → feraspizza → *Settings → Domains & Routes → Add custom domain*.
 
