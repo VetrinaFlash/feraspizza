@@ -1,0 +1,63 @@
+/* Fera's Pizza_Lab — stile condiviso sito pubblico
+   Palette: tufo di Bagheria, nero forno, verde pistacchio di Bronte, brace. */
+@font-face { font-family: "Marcellus"; src: url(/assets/fonts/marcellus-latin-400-normal.woff2) format("woff2"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Figtree"; src: url(/assets/fonts/figtree-latin-wght-normal.woff2) format("woff2"); font-weight: 300 900; font-display: swap; }
+:root {
+  --forno: #000;
+  --carbone: #2a2622;
+  --tufo: #ead9a8;
+  --tufo-chiaro: #f6edd2;
+  --carta: #fffdf6;
+  --basilico: #1f5132;
+  --basilico-scuro: #163b24;
+  --pistacchio: #a9bf6a;
+  --brace: #d9480f;
+  --linea: rgba(0, 0, 0, .14);
+  --muted: #5c5448;
+  --display: "Marcellus", "Trajan Pro", Georgia, serif;
+  --text: "Figtree", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --radius: 14px;
+  --shadow: 0 1px 0 rgba(0,0,0,.08), 0 10px 30px -12px rgba(40, 30, 10, .35);
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } *, *::before, *::after { animation: none !important; transition: none !important; } }
+body { margin: 0; font-family: var(--text); font-size: 17px; line-height: 1.55; color: var(--forno); background: var(--tufo-chiaro); }
+img, svg { display: block; max-width: 100%; }
+a { color: inherit; }
+h1, h2, h3 { font-family: var(--display); font-weight: 400; line-height: 1.08; margin: 0; letter-spacing: .005em; }
+p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--basilico); outline-offset: 3px; border-radius: 4px; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .5em;
+  min-height: 52px; padding: 0 26px; border-radius: 999px; border: 2px solid var(--forno);
+  font-weight: 700; font-size: 17px; text-decoration: none; cursor: pointer; background: transparent;
+  transition: background .15s, color .15s, transform .1s;
+}
+.btn:active { transform: translateY(1px); }
+.btn-primary { background: var(--basilico); border-color: var(--basilico); color: #fff; }
+.btn-primary:hover { background: var(--basilico-scuro); border-color: var(--basilico-scuro); }
+.btn-ghost:hover { background: var(--forno); color: var(--tufo-chiaro); }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+.stato { display: inline-flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; }
+.stato::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: #9a9283; }
+.stato.aperto::before { background: #3c9a52; box-shadow: 0 0 0 4px rgba(60,154,82,.2); }
+.stato.chiuso::before { background: var(--brace); }
+
+.tag { display: inline-block; font-size: 12px; font-weight: 700; padding: 2px 9px; border-radius: 999px; background: var(--tufo); color: var(--carbone); white-space: nowrap; }
+.tag.piccante { background: #fbe1d4; color: #9a2f05; }
+.tag.vegetariana { background: #e3ecc9; color: #33521b; }
+
+.site-footer { background: var(--forno); color: #cfc6b2; padding: 48px 20px 36px; font-size: 15px; }
+.site-footer .wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 28px; grid-template-columns: 1.3fr 1fr 1fr; }
+.site-footer img { width: 190px; }
+.site-footer h3 { font-family: var(--text); font-weight: 700; color: #fff; font-size: 15px; margin-bottom: 8px; }
+.site-footer a { color: #fff; }
+.site-footer .credits { max-width: 1120px; margin: 32px auto 0; padding-top: 18px; border-top: 1px solid #2f2b26; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; font-size: 13px; color: #8f8778; }
+@media (max-width: 760px) { .site-footer .wrap { grid-template-columns: 1fr; } }
+[hidden] { display: none !important; }
+.cerca { display: block; }

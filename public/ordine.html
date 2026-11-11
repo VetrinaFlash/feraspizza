@@ -1,0 +1,117 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Il tuo ordine · Fera's Pizza_Lab</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ead9a8">
+<link rel="icon" href="/assets/icon-192.png">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  body { background: var(--tufo); min-height: 100vh; }
+  .wrap { max-width: 620px; margin: 0 auto; padding: 22px 18px 60px; }
+  .logo img { height: 44px; width: auto; }
+  .numero { margin-top: 26px; font-family: var(--display); font-size: clamp(64px, 18vw, 120px); line-height: .9; }
+  h1 { font-size: clamp(30px, 7vw, 42px); margin-top: 10px; }
+  .sotto { margin-top: 8px; font-size: 18px; color: var(--carbone); }
+  .percorso { list-style: none; padding: 0; margin: 30px 0 0; display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+  .percorso li { padding-top: 12px; border-top: 6px solid rgba(0,0,0,.15); font-size: 14px; font-weight: 600; color: rgba(0,0,0,.5); }
+  .percorso li.fatto { border-color: var(--forno); color: var(--forno); }
+  .percorso li.ora { border-color: var(--basilico); color: var(--basilico); }
+  .scheda { background: var(--carta); border-radius: 18px; padding: 20px; margin-top: 28px; border: 2px solid var(--forno); }
+  .scheda h2 { font-family: var(--text); font-weight: 700; font-size: 17px; margin-bottom: 8px; }
+  .voce { display: flex; justify-content: space-between; gap: 12px; padding: 7px 0; border-bottom: 1px solid var(--linea); font-variant-numeric: tabular-nums; }
+  .voce small { display: block; color: var(--muted); }
+  .tot { display: flex; justify-content: space-between; padding: 3px 0; font-variant-numeric: tabular-nums; }
+  .tot.grande { font-weight: 800; font-size: 20px; padding-top: 10px; }
+  dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; }
+  dt { color: var(--muted); } dd { margin: 0; font-weight: 600; }
+  .azioni { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 22px; }
+  .annullato { background: #fbe1d4; border-radius: 14px; padding: 14px 16px; margin-top: 20px; color: #7a2504; font-weight: 600; }
+  .agg { margin-top: 14px; font-size: 13.5px; color: var(--muted); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a class="logo" href="/"><img src="/assets/logo.svg" alt="Fera's Pizza_Lab" width="131" height="44"></a>
+  <div id="contenuto" aria-live="polite"><p style="margin-top:30px">Carico il tuo ordine…</p></div>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const euro = (c) => (c / 100).toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+const qs = new URLSearchParams(location.search);
+const id = qs.get("id"), t = qs.get("t");
+const FASI = ["nuovo", "accettato", "pronto", "completato"];
+let timer;
+
+function testi(o) {
+  const del = o.type === "delivery";
+  return {
+    nuovo: ["Ordine inviato", "Il locale lo sta guardando adesso. Ti avvisiamo qui appena lo conferma."],
+    accettato: ["Ordine confermato", del ? `Lo stiamo preparando. Consegna prevista alle ${o.slot}.` : `Lo stiamo preparando. Passa a ritirarlo alle ${o.slot}.`],
+    pronto: del ? ["In consegna", "Il fattorino è partito: tieni il telefono a portata di mano."] : ["Pronto da ritirare", "Ti aspettiamo in " + (o.shop_address || "Corso Butera 125") + "."],
+    completato: [del ? "Consegnato" : "Ritirato", "Buon appetito! Grazie per aver ordinato da Fera's."],
+    annullato: ["Ordine annullato", "Il locale ha annullato l'ordine."],
+  }[o.status];
+}
+
+function render(o) {
+  const [titolo, sotto] = testi(o);
+  const idx = FASI.indexOf(o.status);
+  const etichette = ["Inviato", "Confermato", o.type === "delivery" ? "In consegna" : "Pronto", o.type === "delivery" ? "Consegnato" : "Ritirato"];
+  const tel = (o.shop_phone || "").replace(/[^\d+]/g, "");
+  $("#contenuto").innerHTML = `
+    <div class="numero">#${o.number}</div>
+    <h1>${esc(titolo)}</h1>
+    <p class="sotto">${esc(sotto)}</p>
+    ${o.status === "annullato" ? `<div class="annullato">${o.cancel_reason ? "Motivo: " + esc(o.cancel_reason) + ". " : ""}Per informazioni chiamaci.</div>` :
+      `<ol class="percorso" aria-label="Avanzamento ordine">${etichette.map((e, i) => `<li class="${i < idx || o.status === "completato" ? "fatto" : i === idx ? "ora" : ""}"${i === idx ? ' aria-current="step"' : ""}>${e}</li>`).join("")}</ol>`}
+    <div class="scheda">
+      <h2>${o.type === "delivery" ? "Consegna a domicilio" : "Asporto"} · ore ${esc(o.slot)}</h2>
+      <dl>
+        <dt>Nome</dt><dd>${esc(o.name)}</dd>
+        ${o.type === "delivery" ? `<dt>Indirizzo</dt><dd>${esc(o.address)}</dd>` : `<dt>Ritiro</dt><dd>${esc(o.shop_address)}</dd>`}
+        <dt>Pagamento</dt><dd>${o.payment === "pos" ? "Carta con POS" : "Contanti"} ${o.type === "delivery" ? "alla consegna" : "al ritiro"}</dd>
+        ${o.notes ? `<dt>Note</dt><dd>${esc(o.notes)}</dd>` : ""}
+      </dl>
+    </div>
+    <div class="scheda">
+      <h2>Cosa hai ordinato</h2>
+      ${o.items.map((it) => {
+        const mods = [...it.removed.map((r) => "senza " + r), ...it.extras.map((e) => "+ " + e), ...(it.note ? ["“" + it.note + "”"] : [])];
+        return `<div class="voce"><span>${it.qty} × ${esc(it.name)}${mods.length ? `<small>${esc(mods.join(", "))}</small>` : ""}</span><span>${euro(it.unit_cents * it.qty)}</span></div>`;
+      }).join("")}
+      <div style="margin-top:8px">
+        <div class="tot"><span>Subtotale</span><span>${euro(o.subtotal_cents)}</span></div>
+        ${o.discount_cents ? `<div class="tot"><span>Sconto online</span><span>−${euro(o.discount_cents)}</span></div>` : ""}
+        ${o.type === "delivery" ? `<div class="tot"><span>Consegna</span><span>${o.delivery_cents ? euro(o.delivery_cents) : "Gratis"}</span></div>` : ""}
+        <div class="tot grande"><span>Totale da pagare</span><span>${euro(o.total_cents)}</span></div>
+      </div>
+    </div>
+    <div class="azioni">
+      ${tel ? `<a class="btn btn-ghost" href="tel:${esc(tel)}">Chiama il locale</a>` : ""}
+      <a class="btn btn-primary" href="/menu">Torna al menu</a>
+    </div>
+    <p class="agg">Questa pagina si aggiorna da sola. Puoi salvarla tra i preferiti per ritrovare l'ordine.</p>`;
+  document.title = `#${o.number} ${titolo} · Fera's Pizza_Lab`;
+  if (["completato", "annullato"].includes(o.status)) clearInterval(timer);
+}
+
+async function load() {
+  try {
+    const r = await fetch(`/api/order?id=${encodeURIComponent(id || "")}&t=${encodeURIComponent(t || "")}`);
+    const d = await r.json();
+    if (!r.ok) throw new Error(d.error);
+    render(d);
+  } catch (e) {
+    if (!$(".numero")) $("#contenuto").innerHTML = `<h1 style="margin-top:30px">Ordine non trovato</h1><p class="sotto">Il link potrebbe essere incompleto. Se hai appena ordinato, chiamaci e ti diamo conferma.</p><div class="azioni"><a class="btn btn-primary" href="/menu">Vai al menu</a></div>`;
+  }
+}
+load();
+timer = setInterval(() => { if (!document.hidden) load(); }, 15000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) load(); });
+</script>
+</body>
+</html>

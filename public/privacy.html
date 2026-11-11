@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Informativa privacy · Fera's Pizza_Lab</title>
+<link rel="icon" href="/assets/icon-192.png">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  .wrap { max-width: 720px; margin: 0 auto; padding: 24px 20px 70px; }
+  .wrap img { height: 44px; width: auto; }
+  h1 { font-size: 44px; margin: 30px 0 16px; }
+  h2 { font-family: var(--text); font-weight: 700; font-size: 19px; margin: 26px 0 6px; }
+  p, li { color: var(--carbone); }
+  p + p { margin-top: 10px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="/"><img src="/assets/logo.svg" alt="Fera's Pizza_Lab" width="131" height="44"></a>
+  <h1>Informativa privacy</h1>
+  <p>Questa informativa spiega come trattiamo i dati inseriti quando ordini sul sito, ai sensi del Regolamento UE 2016/679 (GDPR).</p>
+
+  <h2>Titolare del trattamento</h2>
+  <p>Fera's Pizza_Lab, <span class="js-indirizzo">Corso Butera 125, 90011 Bagheria (PA)</span>. Telefono <span class="js-tel">091 227850</span><span class="js-email"></span>.</p>
+
+  <h2>Quali dati raccogliamo</h2>
+  <p>Nome, numero di telefono, indirizzo di consegna (solo per le consegne), eventuali note e i prodotti ordinati. Non raccogliamo dati di pagamento: si paga al ritiro o alla consegna.</p>
+
+  <h2>Perché li usiamo</h2>
+  <p>Solo per preparare, consegnare e gestire il tuo ordine e per contattarti se c'è un problema con l'ordine (base giuridica: esecuzione di un contratto, art. 6.1.b GDPR). Conserviamo lo storico degli ordini per gli obblighi fiscali e per riconoscerti quando ordini di nuovo.</p>
+  <p>Non usiamo i tuoi dati per pubblicità e non li cediamo a terzi. I dati sono ospitati sull'infrastruttura di Cloudflare, che agisce come responsabile del trattamento.</p>
+
+  <h2>Per quanto tempo</h2>
+  <p>I dati degli ordini sono conservati per il tempo necessario agli obblighi di legge (di norma 10 anni per i documenti contabili). Puoi chiedere in ogni momento la cancellazione dei dati non soggetti a obbligo di conservazione.</p>
+
+  <h2>Cookie e dati sul dispositivo</h2>
+  <p>Il sito non usa cookie di profilazione né strumenti di tracciamento. Il tuo browser ricorda il carrello e i dati dell'ultimo ordine per non farteli reinserire: restano solo sul tuo dispositivo. La mappa di Google viene caricata solo se premi "Mostra la mappa".</p>
+
+  <h2>I tuoi diritti</h2>
+  <p>Puoi chiedere accesso, rettifica, cancellazione o limitazione dei tuoi dati contattandoci ai recapiti sopra. Puoi anche presentare reclamo al Garante per la protezione dei dati personali (garanteprivacy.it).</p>
+</div>
+<footer class="site-footer"><div class="credits" style="margin-top:0;border:0;padding-top:0"><span>© Fera's Pizza_Lab</span><span>Sito realizzato da Daniele Zobel</span></div></footer>
+<script>
+fetch("/api/config").then((r) => r.json()).then(({ settings: s }) => {
+  if (s.shop_address) document.querySelectorAll(".js-indirizzo").forEach((e) => (e.textContent = s.shop_address));
+  if (s.shop_phone) document.querySelectorAll(".js-tel").forEach((e) => (e.textContent = s.shop_phone));
+  if (s.shop_email) document.querySelectorAll(".js-email").forEach((e) => (e.textContent = ", email " + s.shop_email));
+}).catch(() => {});
+</script>
+</body>
+</html>

@@ -1,0 +1,976 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Gestione · Fera's Pizza_Lab</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#000000">
+<link rel="manifest" href="/admin.webmanifest">
+<link rel="icon" href="/assets/icon-192.png">
+<link rel="apple-touch-icon" href="/assets/icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Fera's Ordini">
+<style>
+@font-face { font-family: "Figtree"; src: url(/assets/fonts/figtree-latin-wght-normal.woff2) format("woff2"); font-weight: 300 900; font-display: swap; }
+:root {
+  --nero: #000; --grigio: #6b665c; --linea: #e3ded2; --fondo: #f5f2ea; --bianco: #fff;
+  --verde: #1f5132; --verde-chiaro: #e3efe2; --giallo: #f6e7b4; --rosso: #b3360b; --rosso-chiaro: #fbe1d4; --blu: #1d4f86; --blu-chiaro: #dfe9f6;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0; font-family: "Figtree", system-ui, sans-serif; font-size: 16px; color: var(--nero); background: var(--fondo); -webkit-text-size-adjust: 100%; }
+button, input, select, textarea { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--verde); outline-offset: 2px; }
+h1, h2, h3 { margin: 0; line-height: 1.2; }
+a { color: inherit; }
+
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 44px; padding: 0 16px; border-radius: 10px; border: 1.5px solid var(--linea); background: var(--bianco); font-weight: 700; font-size: 15px; cursor: pointer; text-decoration: none; white-space: nowrap; }
+.btn:hover { border-color: var(--nero); }
+.btn.pri { background: var(--verde); border-color: var(--verde); color: #fff; }
+.btn.nero { background: var(--nero); border-color: var(--nero); color: #fff; }
+.btn.rosso { color: var(--rosso); }
+.btn.grande { min-height: 54px; font-size: 17px; padding: 0 22px; }
+.btn.piccolo { min-height: 34px; padding: 0 10px; font-size: 14px; }
+.btn[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* Login */
+#login { min-height: 100vh; display: grid; place-items: center; padding: 20px; background: #ead9a8; }
+#login form { background: var(--bianco); border-radius: 20px; padding: 28px; width: min(380px, 100%); border: 2px solid var(--nero); }
+#login img { width: 210px; margin: 0 auto 20px; display: block; }
+
+/* Struttura */
+.top { position: sticky; top: 0; z-index: 40; background: var(--nero); color: #fff; }
+.top .in { display: flex; align-items: center; gap: 12px; padding: 8px 14px; }
+.top img { height: 34px; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; scrollbar-width: none; padding: 0 10px; background: var(--nero); }
+.tabs::-webkit-scrollbar { display: none; }
+.tabs a { color: #cfc8b8; text-decoration: none; padding: 10px 14px 12px; font-weight: 700; font-size: 15px; border-bottom: 3px solid transparent; white-space: nowrap; }
+.tabs a.on { color: #fff; border-color: #a9bf6a; }
+.tabs .badge { background: #e8661f; color: #fff; border-radius: 999px; padding: 0 7px; font-size: 13px; margin-left: 4px; }
+.top .dx { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.interruttore { display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-weight: 700; font-size: 14px; border-radius: 999px; padding: 6px 12px 6px 6px; background: #1d1d1b; border: 1px solid #333; color: #fff; }
+.interruttore .pallino { width: 22px; height: 22px; border-radius: 50%; background: #3c9a52; }
+.interruttore.off .pallino { background: #e8661f; }
+.icona { width: 40px; height: 40px; border-radius: 10px; border: 1px solid #333; background: #1d1d1b; color: #fff; cursor: pointer; display: grid; place-items: center; font-size: 18px; }
+main { padding: 16px; max-width: 1500px; margin: 0 auto; }
+.barra { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 14px; }
+.barra h1 { font-size: 24px; margin-right: auto; }
+.nota { color: var(--grigio); font-size: 14px; }
+.avviso-suono { background: var(--giallo); border-radius: 12px; padding: 12px 14px; display: flex; gap: 12px; align-items: center; margin-bottom: 14px; font-weight: 600; }
+.avviso-suono .btn { margin-left: auto; }
+
+/* Ordini */
+.colonne { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.colonna > h2 { font-size: 16px; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
+.colonna > h2 span { background: var(--nero); color: #fff; border-radius: 999px; padding: 0 9px; font-size: 14px; }
+.colonna .vuota { color: var(--grigio); font-size: 14px; padding: 18px; border: 2px dashed var(--linea); border-radius: 14px; text-align: center; }
+@media (max-width: 1050px) { .colonne { grid-template-columns: 1fr; } }
+.ordine { background: var(--bianco); border-radius: 14px; border: 2px solid var(--linea); margin-bottom: 12px; overflow: hidden; }
+.ordine.nuovo { border-color: #e8661f; box-shadow: 0 0 0 4px rgba(232,102,31,.18); }
+.ordine.nuovo.lampeggia { animation: lamp 1.2s ease-in-out infinite; }
+@keyframes lamp { 50% { box-shadow: 0 0 0 9px rgba(232,102,31,.35); } }
+.ordine .testa { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-bottom: 1px solid var(--linea); }
+.ordine .num { font-size: 26px; font-weight: 900; }
+.ordine .ora { font-size: 22px; font-weight: 800; margin-left: auto; font-variant-numeric: tabular-nums; }
+.tipo { font-size: 13px; font-weight: 800; padding: 3px 9px; border-radius: 999px; }
+.tipo.delivery { background: var(--blu-chiaro); color: var(--blu); }
+.tipo.takeaway { background: var(--verde-chiaro); color: var(--verde); }
+.ordine .corpo { padding: 12px 14px; }
+.cliente { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 15px; }
+.cliente strong { font-size: 16px; }
+.cliente a { font-weight: 700; }
+.articoli { list-style: none; margin: 10px 0 0; padding: 0; }
+.articoli li { padding: 6px 0; border-top: 1px dashed var(--linea); font-size: 16px; }
+.articoli .q { font-weight: 900; margin-right: 4px; }
+.articoli .senza { color: var(--rosso); font-weight: 800; font-size: 14px; display: block; }
+.articoli .extra { color: var(--verde); font-weight: 800; font-size: 14px; display: block; }
+.articoli .nt { font-style: italic; font-size: 14px; display: block; }
+.note-ordine { background: var(--giallo); border-radius: 8px; padding: 8px 10px; margin-top: 10px; font-weight: 600; font-size: 15px; }
+.totale-ord { display: flex; justify-content: space-between; margin-top: 10px; font-weight: 800; font-size: 17px; }
+.totale-ord small { font-weight: 600; color: var(--grigio); font-size: 14px; }
+.ordine .azioni { display: flex; flex-wrap: wrap; gap: 8px; padding: 0 14px 14px; }
+.ordine .azioni .btn.grande { flex: 1 1 160px; }
+.chiusi { margin-top: 26px; }
+.chiusi table { width: 100%; border-collapse: collapse; background: var(--bianco); border-radius: 12px; overflow: hidden; font-size: 15px; }
+.chiusi th, .chiusi td { text-align: left; padding: 10px 12px; border-bottom: 1px solid var(--linea); }
+.chiusi th { font-size: 13px; color: var(--grigio); }
+.chiusi tr { cursor: pointer; }
+.chiusi tr:hover td { background: #faf8f2; }
+.stato { font-weight: 800; font-size: 13px; padding: 2px 8px; border-radius: 999px; background: var(--fondo); white-space: nowrap; }
+.stato.annullato { background: var(--rosso-chiaro); color: var(--rosso); }
+.stato.completato { background: var(--verde-chiaro); color: var(--verde); }
+
+/* Tabelle e form */
+.pannello { background: var(--bianco); border-radius: 14px; border: 1px solid var(--linea); padding: 16px; }
+.campo { display: block; margin-bottom: 12px; }
+.campo > span { display: block; font-weight: 700; font-size: 14px; margin-bottom: 5px; }
+.campo small { display: block; color: var(--grigio); font-size: 13px; margin-top: 4px; }
+input[type=text], input[type=tel], input[type=email], input[type=url], input[type=password], input[type=number], input[type=date], input[type=time], input[type=search], select, textarea {
+  width: 100%; min-height: 44px; border: 1.5px solid #cfc9bb; border-radius: 10px; padding: 8px 12px; background: #fff; font-size: 16px; }
+textarea { min-height: 80px; resize: vertical; }
+input:focus, select:focus, textarea:focus { outline: none; border-color: var(--nero); }
+.check { display: flex; gap: 10px; align-items: center; font-weight: 600; margin: 8px 0; cursor: pointer; }
+.check input { width: 22px; height: 22px; accent-color: var(--verde); }
+.griglia2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 640px) { .griglia2 { grid-template-columns: 1fr; } }
+
+/* Menu */
+.menu-layout { display: grid; grid-template-columns: 300px 1fr; gap: 16px; align-items: start; }
+@media (max-width: 860px) { .menu-layout { grid-template-columns: 1fr; } }
+.lista-cat { list-style: none; margin: 0; padding: 0; }
+.lista-cat li { display: flex; align-items: center; gap: 6px; padding: 6px; border-radius: 10px; cursor: pointer; }
+.lista-cat li.on { background: var(--nero); color: #fff; }
+.lista-cat li .n { flex: 1; font-weight: 700; padding: 6px; }
+.lista-cat li .c { font-size: 13px; opacity: .7; }
+.lista-cat li.spenta .n { text-decoration: line-through; opacity: .6; }
+.mini { width: 32px; height: 32px; border-radius: 8px; border: 1px solid var(--linea); background: #fff; color: #000; cursor: pointer; font-size: 14px; }
+.prodotti-admin { width: 100%; border-collapse: collapse; }
+.prodotti-admin td { padding: 10px 8px; border-bottom: 1px solid var(--linea); vertical-align: middle; }
+.prodotti-admin .nome { font-weight: 700; }
+.prodotti-admin .desc { color: var(--grigio); font-size: 14px; }
+.prodotti-admin .prezzo { font-weight: 800; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.prodotti-admin img { width: 48px; height: 48px; border-radius: 8px; object-fit: cover; }
+.prodotti-admin tr.nascosto .nome { opacity: .5; }
+.azioni-riga { display: flex; gap: 4px; justify-content: flex-end; }
+.switch { position: relative; display: inline-flex; align-items: center; gap: 8px; cursor: pointer; font-size: 13px; font-weight: 700; }
+.switch input { position: absolute; opacity: 0; }
+.switch .tr { width: 50px; height: 30px; border-radius: 999px; background: #c9c3b5; position: relative; transition: background .15s; flex: none; }
+.switch .tr::after { content: ""; position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: 50%; background: #fff; transition: transform .15s; }
+.switch input:checked + .tr { background: var(--verde); }
+.switch input:checked + .tr::after { transform: translateX(20px); }
+.switch input:focus-visible + .tr { outline: 3px solid var(--verde); outline-offset: 2px; }
+@media (max-width: 640px) { .prodotti-admin .desc, .prodotti-admin .col-img { display: none; } }
+
+/* Impostazioni */
+.impostazioni { display: grid; grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); gap: 14px; align-items: start; }
+.impostazioni h2 { font-size: 18px; margin-bottom: 12px; }
+.orari-giorno { display: grid; grid-template-columns: 100px 1fr; gap: 8px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--linea); }
+.orari-giorno .fasce { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.orari-giorno input[type=time] { width: 118px; min-height: 38px; padding: 4px 8px; }
+.salva-barra { position: sticky; bottom: 0; background: var(--fondo); padding: 12px 0; margin-top: 14px; display: flex; gap: 12px; align-items: center; }
+.date-chiuse { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.date-chiuse span { background: var(--rosso-chiaro); color: var(--rosso); border-radius: 999px; padding: 4px 6px 4px 12px; font-weight: 700; font-size: 14px; display: inline-flex; gap: 6px; align-items: center; }
+.date-chiuse button { border: 0; background: none; cursor: pointer; font-weight: 900; color: inherit; }
+
+/* Statistiche */
+.kpi { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 14px; }
+.kpi div { background: var(--bianco); border: 1px solid var(--linea); border-radius: 14px; padding: 14px 16px; }
+.kpi strong { display: block; font-size: 28px; font-variant-numeric: tabular-nums; }
+.kpi span { color: var(--grigio); font-size: 14px; }
+.grafico { display: flex; align-items: flex-end; gap: 3px; height: 180px; padding-top: 10px; }
+.grafico div { flex: 1; background: var(--verde); border-radius: 4px 4px 0 0; min-height: 2px; position: relative; }
+.grafico div:hover { background: #2d7547; }
+.asse { display: flex; justify-content: space-between; font-size: 12px; color: var(--grigio); margin-top: 6px; }
+.barre-h div { display: grid; grid-template-columns: 1fr 2fr auto; gap: 10px; align-items: center; padding: 5px 0; font-size: 15px; }
+.barre-h i { display: block; height: 12px; background: var(--verde); border-radius: 6px; }
+
+table.semplice { width: 100%; border-collapse: collapse; font-size: 15px; }
+table.semplice th, table.semplice td { text-align: left; padding: 9px 8px; border-bottom: 1px solid var(--linea); }
+table.semplice th { font-size: 13px; color: var(--grigio); }
+table.semplice th.num { text-align: right; }
+table.semplice td.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+dialog { border: 0; border-radius: 18px; padding: 0; width: min(620px, calc(100vw - 20px)); max-height: calc(100dvh - 20px); }
+dialog::backdrop { background: rgba(0,0,0,.5); }
+.dlg { display: flex; flex-direction: column; max-height: inherit; }
+.dlg header { display: flex; align-items: center; gap: 10px; padding: 16px 18px; border-bottom: 1px solid var(--linea); }
+.dlg header h2 { flex: 1; font-size: 20px; }
+.dlg .cont { padding: 16px 18px; overflow-y: auto; }
+.dlg footer { padding: 12px 18px; border-top: 1px solid var(--linea); display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap; }
+.extra-riga { display: grid; grid-template-columns: 1fr 110px 40px; gap: 6px; margin-bottom: 6px; }
+.foto-anteprima { display: flex; gap: 12px; align-items: center; }
+.foto-anteprima img { width: 96px; height: 96px; border-radius: 12px; object-fit: cover; border: 1px solid var(--linea); }
+.toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: var(--nero); color: #fff; padding: 12px 18px; border-radius: 12px; font-weight: 700; z-index: 100; box-shadow: 0 10px 30px rgba(0,0,0,.3); }
+.toast.err { background: var(--rosso); }
+
+/* Stampa comanda 80 mm */
+#stampa { display: none; }
+@media print {
+  @page { size: 80mm auto; margin: 3mm; }
+  body > *:not(#stampa) { display: none !important; }
+  #stampa { display: block; font-family: system-ui, sans-serif; font-size: 13px; color: #000; width: 74mm; }
+  #stampa h1 { font-size: 26px; margin: 0; }
+  #stampa .grande { font-size: 18px; font-weight: 900; }
+  #stampa hr { border: 0; border-top: 1px dashed #000; margin: 6px 0; }
+  #stampa .r { display: flex; justify-content: space-between; gap: 6px; }
+}
+</style>
+</head>
+<body>
+
+<section id="login" hidden>
+  <form id="form-login">
+    <img src="/assets/logo.svg" alt="Fera's Pizza_Lab" width="210" height="71">
+    <h1 style="font-size:22px;margin-bottom:16px">Accedi alla gestione</h1>
+    <label class="campo"><span>Utente</span><input type="text" name="username" autocomplete="username" autocapitalize="characters" required></label>
+    <label class="campo"><span>Password</span><input type="password" name="password" autocomplete="current-password" required></label>
+    <p id="login-err" style="color:var(--rosso);font-weight:700" role="alert" hidden></p>
+    <button class="btn pri grande" style="width:100%" type="submit">Accedi</button>
+    <p class="nota" style="margin-top:12px">Su questo dispositivo resterai connesso per un anno.</p>
+  </form>
+</section>
+
+<div id="app" hidden>
+  <div class="top">
+    <div class="in">
+      <img src="/assets/logo-white.svg" alt="Fera's" width="101" height="34">
+      <div class="dx">
+        <button class="interruttore" id="btn-pausa" type="button" title="Accetta o metti in pausa gli ordini online"><span class="pallino"></span><span id="pausa-testo">Ordini attivi</span></button>
+        <button class="icona" id="btn-suono" type="button" title="Suono nuovi ordini" aria-label="Suono nuovi ordini">🔔</button>
+        <button class="icona" id="btn-esci" type="button" title="Esci" aria-label="Esci" style="width:auto;padding:0 12px;font-size:14px;font-weight:700">Esci</button>
+      </div>
+    </div>
+    <nav class="tabs" aria-label="Sezioni">
+      <a href="#ordini" data-tab="ordini">Ordini <span class="badge" id="badge-nuovi" hidden></span></a>
+      <a href="#menu" data-tab="menu">Menu</a>
+      <a href="#impostazioni" data-tab="impostazioni">Impostazioni</a>
+      <a href="#clienti" data-tab="clienti">Clienti</a>
+      <a href="#statistiche" data-tab="statistiche">Statistiche</a>
+    </nav>
+  </div>
+
+  <main>
+    <!-- ORDINI -->
+    <section data-sez="ordini">
+      <div class="avviso-suono" id="sblocca-suono" hidden>🔈 Tocca qui per attivare il suono degli ordini su questo dispositivo. <button class="btn nero" type="button">Attiva suono</button></div>
+      <div class="avviso-suono" id="suggerisci-push" hidden>📲 Attiva le notifiche per ricevere gli ordini anche a pannello chiuso. <a class="btn nero" href="#impostazioni" data-vai-push>Attiva</a></div>
+      <div class="barra">
+        <h1 id="titolo-ordini">Ordini di oggi</h1>
+        <span class="nota" id="ultimo-agg"></span>
+        <label class="check" title="Lo schermo non si spegne mentre il pannello è aperto"><input type="checkbox" id="wake"> Schermo sempre acceso</label>
+        <input type="date" id="data-storico" aria-label="Vedi ordini di un altro giorno" style="width:170px">
+      </div>
+      <div class="colonne" id="colonne">
+        <div class="colonna"><h2>Da confermare <span id="n-nuovo">0</span></h2><div id="col-nuovo"></div></div>
+        <div class="colonna"><h2>In preparazione <span id="n-accettato">0</span></h2><div id="col-accettato"></div></div>
+        <div class="colonna"><h2>Pronti / in consegna <span id="n-pronto">0</span></h2><div id="col-pronto"></div></div>
+      </div>
+      <div class="chiusi">
+        <div class="barra"><h2 style="font-size:18px;margin-right:auto" id="titolo-chiusi">Chiusi oggi</h2><span class="nota" id="riepilogo-oggi"></span></div>
+        <table><thead><tr><th>#</th><th>Ora</th><th>Cliente</th><th>Tipo</th><th>Totale</th><th>Stato</th></tr></thead><tbody id="tab-chiusi"></tbody></table>
+      </div>
+    </section>
+
+    <!-- MENU -->
+    <section data-sez="menu" hidden>
+      <div class="barra"><h1>Menu</h1><span class="nota">Le modifiche sono subito visibili sul sito.</span></div>
+      <div class="menu-layout">
+        <div class="pannello">
+          <div class="barra" style="margin-bottom:8px"><h2 style="font-size:17px;margin-right:auto">Categorie</h2><button class="btn piccolo" id="nuova-cat" type="button">+ Nuova</button></div>
+          <ul class="lista-cat" id="lista-cat"></ul>
+        </div>
+        <div class="pannello">
+          <div class="barra">
+            <h2 style="font-size:20px;margin-right:auto" id="cat-titolo"></h2>
+            <button class="btn piccolo" id="modifica-cat" type="button">Modifica categoria</button>
+            <button class="btn pri" id="nuovo-prod" type="button">+ Nuovo prodotto</button>
+          </div>
+          <input type="search" id="cerca-prod" placeholder="Cerca in tutto il menu" style="margin-bottom:8px">
+          <table class="prodotti-admin"><tbody id="tab-prodotti"></tbody></table>
+        </div>
+      </div>
+    </section>
+
+    <!-- IMPOSTAZIONI -->
+    <section data-sez="impostazioni" hidden>
+      <div class="barra"><h1>Impostazioni</h1></div>
+      <form id="form-imp">
+        <div class="impostazioni">
+          <div class="pannello">
+            <h2>Ordini online</h2>
+            <label class="check"><input type="checkbox" name="ordering_paused"> Metti in pausa gli ordini online</label>
+            <label class="campo"><span>Messaggio durante la pausa</span><input type="text" name="pause_message" maxlength="200"></label>
+            <label class="check"><input type="checkbox" name="takeaway_enabled"> Accetta ordini da asporto</label>
+            <label class="check"><input type="checkbox" name="delivery_enabled"> Accetta consegne a domicilio</label>
+            <label class="campo"><span>Sconto sugli ordini online (%)</span><input type="number" name="online_discount_percent" min="0" max="50" step="1"><small>0 = nessuno sconto. Si applica al subtotale, consegna esclusa.</small></label>
+            <h2 style="margin-top:16px">Pagamento accettato</h2>
+            <label class="check"><input type="checkbox" name="payment_cash"> Contanti</label>
+            <label class="check"><input type="checkbox" name="payment_pos"> Carta con POS al ritiro o alla consegna</label>
+          </div>
+          <div class="pannello">
+            <h2>Consegna e tempi</h2>
+            <div class="griglia2">
+              <label class="campo"><span>Costo consegna (€)</span><input type="text" inputmode="decimal" name="delivery_fee_cents" data-euro></label>
+              <label class="campo"><span>Ordine minimo consegna (€)</span><input type="text" inputmode="decimal" name="delivery_min_cents" data-euro></label>
+              <label class="campo"><span>Consegna gratis sopra (€)</span><input type="text" inputmode="decimal" name="free_delivery_over_cents" data-euro><small>0 = mai gratis</small></label>
+              <label class="campo"><span>Intervallo fasce orarie (min)</span><input type="number" name="slot_minutes" min="5" max="60" step="5"></label>
+              <label class="campo"><span>Tempo preparazione asporto (min)</span><input type="number" name="prep_minutes" min="5" max="180"></label>
+              <label class="campo"><span>Tempo minimo consegna (min)</span><input type="number" name="delivery_minutes" min="10" max="240"></label>
+            </div>
+            <label class="campo"><span>Ordini massimi per fascia oraria</span><input type="number" name="slot_capacity" min="0" max="200"><small>0 = senza limite. Quando una fascia è piena non viene più proposta.</small></label>
+            <label class="campo"><span>Zona di consegna (testo per i clienti)</span><textarea name="delivery_area" maxlength="300"></textarea></label>
+          </div>
+          <div class="pannello">
+            <h2>Orari di apertura</h2>
+            <p class="nota" style="margin:-6px 0 6px">Gli ordini si possono fare per gli orari di oggi. Per chiudere un giorno lascialo senza fasce.</p>
+            <div id="orari-editor"></div>
+            <h2 style="margin-top:18px">Chiusure straordinarie</h2>
+            <div style="display:flex;gap:8px"><input type="date" id="nuova-chiusura" style="flex:1"><button class="btn" type="button" id="aggiungi-chiusura">Aggiungi</button></div>
+            <div class="date-chiuse" id="date-chiuse"></div>
+          </div>
+          <div class="pannello">
+            <h2>Contatti mostrati sul sito</h2>
+            <label class="campo"><span>Telefono</span><input type="tel" name="shop_phone" maxlength="30"></label>
+            <label class="campo"><span>WhatsApp</span><input type="tel" name="shop_whatsapp" maxlength="30" placeholder="Es. 333 1234567"></label>
+            <label class="campo"><span>Indirizzo</span><input type="text" name="shop_address" maxlength="160"></label>
+            <label class="campo"><span>Email</span><input type="email" name="shop_email" maxlength="120"></label>
+            <label class="campo"><span>Link Instagram</span><input type="url" name="instagram_url" maxlength="200" placeholder="https://instagram.com/…"></label>
+            <label class="campo"><span>Link Facebook</span><input type="url" name="facebook_url" maxlength="200" placeholder="https://facebook.com/…"></label>
+            <label class="campo"><span>Avviso in cima al sito</span><input type="text" name="announcement" maxlength="200" placeholder="Es. Stasera nuova pizza del mese!"><small>Lascia vuoto per non mostrarlo.</small></label>
+          </div>
+          <div class="pannello">
+            <h2>Notifiche nuovi ordini</h2>
+            <p class="nota" id="push-stato">Controllo…</p>
+            <p class="nota" style="margin-top:6px">Su iPhone: apri questa pagina in Safari, premi Condividi → "Aggiungi alla schermata Home", apri l'app dall'icona e attiva qui le notifiche.</p>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:12px">
+              <button class="btn pri" type="button" id="push-attiva">Attiva su questo dispositivo</button>
+              <button class="btn" type="button" id="push-prova" hidden>Invia una prova</button>
+              <button class="btn rosso" type="button" id="push-disattiva" hidden>Disattiva</button>
+            </div>
+            <label class="check" style="margin-top:14px"><input type="checkbox" name="sound_enabled"> Suono nel pannello quando arriva un ordine</label>
+          </div>
+          <div class="pannello">
+            <h2>Cambia password</h2>
+            <label class="campo"><span>Password attuale</span><input type="password" id="pw-attuale" autocomplete="current-password"></label>
+            <label class="campo"><span>Nuova password (almeno 8 caratteri)</span><input type="password" id="pw-nuova" autocomplete="new-password"></label>
+            <button class="btn" type="button" id="pw-salva">Cambia password</button>
+            <p class="nota" style="margin-top:8px">Gli altri dispositivi collegati verranno disconnessi.</p>
+          </div>
+        </div>
+        <div class="salva-barra"><button class="btn pri grande" type="submit">Salva impostazioni</button><span class="nota" id="imp-esito"></span></div>
+      </form>
+    </section>
+
+    <!-- CLIENTI -->
+    <section data-sez="clienti" hidden>
+      <div class="barra">
+        <h1>Clienti</h1>
+        <input type="search" id="cerca-clienti" placeholder="Nome o telefono" style="width:220px">
+        <select id="ordina-clienti" style="width:auto"><option value="recenti">Più recenti</option><option value="ordini">Più ordini</option><option value="spesa">Spesa più alta</option></select>
+        <a class="btn" href="/api/admin/customers.csv" download>Esporta CSV</a>
+      </div>
+      <div class="pannello" style="overflow-x:auto">
+        <table class="semplice"><thead><tr><th>Nome</th><th>Telefono</th><th>Indirizzo</th><th class="num">Ordini</th><th class="num">Spesa</th><th>Ultimo ordine</th></tr></thead><tbody id="tab-clienti"></tbody></table>
+        <div class="barra" style="margin:12px 0 0"><span class="nota" id="clienti-conteggio" style="margin-right:auto"></span><button class="btn piccolo" id="clienti-prec" type="button">‹ Precedenti</button><button class="btn piccolo" id="clienti-succ" type="button">Successivi ›</button></div>
+      </div>
+    </section>
+
+    <!-- STATISTICHE -->
+    <section data-sez="statistiche" hidden>
+      <div class="barra"><h1>Statistiche</h1>
+        <select id="periodo" style="width:auto"><option value="7">Ultimi 7 giorni</option><option value="30" selected>Ultimi 30 giorni</option><option value="90">Ultimi 90 giorni</option><option value="365">Ultimo anno</option></select>
+      </div>
+      <div class="kpi" id="kpi"></div>
+      <div class="griglia2">
+        <div class="pannello"><h2 style="font-size:17px">Incasso per giorno</h2><div class="grafico" id="grafico"></div><div class="asse" id="asse"></div></div>
+        <div class="pannello"><h2 style="font-size:17px;margin-bottom:8px">Ordini per orario</h2><div class="barre-h" id="orari-punta"></div></div>
+      </div>
+      <div class="pannello" style="margin-top:12px"><h2 style="font-size:17px;margin-bottom:8px">Prodotti più venduti</h2>
+        <table class="semplice"><thead><tr><th>Prodotto</th><th class="num">Pezzi</th><th class="num">Incasso</th></tr></thead><tbody id="top-prodotti"></tbody></table></div>
+      <p class="nota" style="margin-top:10px">Gli ordini annullati non sono conteggiati. Gli incassi sono quelli registrati dagli ordini online.</p>
+    </section>
+  </main>
+</div>
+
+<!-- Dialog prodotto -->
+<dialog id="dlg-prod"><form class="dlg" id="form-prod">
+  <header><h2 id="prod-titolo">Prodotto</h2><button class="mini" type="button" data-chiudi aria-label="Chiudi">✕</button></header>
+  <div class="cont">
+    <input type="hidden" name="id">
+    <label class="campo"><span>Nome</span><input type="text" name="name" required maxlength="80"></label>
+    <div class="griglia2">
+      <label class="campo"><span>Prezzo (€)</span><input type="text" name="price" inputmode="decimal" required></label>
+      <label class="campo"><span>Categoria</span><select name="category_id" id="prod-cat"></select></label>
+    </div>
+    <label class="campo"><span>Ingredienti / descrizione</span><textarea name="description" maxlength="400"></textarea><small>Separa gli ingredienti con una virgola: il cliente potrà toglierli uno per uno.</small></label>
+    <label class="campo"><span>Etichette</span><input type="text" name="tags" placeholder="piccante, vegetariana, novità"><small>Separate da virgola. Esempi: piccante, vegetariana, della casa, novità, più richiesta.</small></label>
+    <div class="campo"><span>Foto</span>
+      <div class="foto-anteprima"><img id="prod-foto" alt="" hidden><div><input type="file" id="prod-file" accept="image/*"><br><button class="btn piccolo rosso" type="button" id="prod-foto-via" hidden style="margin-top:6px">Rimuovi foto</button></div></div>
+      <small>La foto viene ridimensionata automaticamente. Facoltativa.</small>
+      <input type="hidden" name="image_id">
+    </div>
+    <label class="check"><input type="checkbox" name="available"> Disponibile (se tolto, appare "Terminato per oggi")</label>
+    <label class="check"><input type="checkbox" name="active"> Visibile nel menu</label>
+  </div>
+  <footer><button class="btn rosso" type="button" id="prod-elimina" style="margin-right:auto">Elimina</button><button class="btn" type="button" data-chiudi>Annulla</button><button class="btn pri" type="submit">Salva prodotto</button></footer>
+</form></dialog>
+
+<!-- Dialog categoria -->
+<dialog id="dlg-cat"><form class="dlg" id="form-cat">
+  <header><h2 id="cat-dlg-titolo">Categoria</h2><button class="mini" type="button" data-chiudi aria-label="Chiudi">✕</button></header>
+  <div class="cont">
+    <input type="hidden" name="id">
+    <label class="campo"><span>Nome</span><input type="text" name="name" required maxlength="60"></label>
+    <label class="campo"><span>Descrizione (facoltativa)</span><input type="text" name="description" maxlength="200"></label>
+    <label class="check"><input type="checkbox" name="active"> Visibile nel menu</label>
+    <label class="check"><input type="checkbox" name="removable"> Il cliente può togliere gli ingredienti</label>
+    <div class="campo" style="margin-top:14px"><span>Aggiunte a pagamento per tutti i prodotti della categoria</span>
+      <div id="extra-righe"></div>
+      <button class="btn piccolo" type="button" id="extra-aggiungi">+ Aggiunta</button>
+      <small>Esempio: Bufala 2,00 · Burrata 2,50 · Doppio fiordilatte 1,50</small>
+    </div>
+  </div>
+  <footer><button class="btn rosso" type="button" id="cat-elimina" style="margin-right:auto">Elimina</button><button class="btn" type="button" data-chiudi>Annulla</button><button class="btn pri" type="submit">Salva categoria</button></footer>
+</form></dialog>
+
+<!-- Dialog annullamento -->
+<dialog id="dlg-annulla"><form class="dlg" id="form-annulla">
+  <header><h2>Annulla ordine <span id="annulla-num"></span></h2><button class="mini" type="button" data-chiudi aria-label="Chiudi">✕</button></header>
+  <div class="cont">
+    <label class="campo"><span>Motivo (lo vede il cliente)</span>
+      <select id="annulla-motivo"><option>Siamo al completo per quell'orario</option><option>Indirizzo fuori zona di consegna</option><option>Prodotto non disponibile</option><option>Il cliente ha chiesto di annullare</option><option>Numero di telefono non raggiungibile</option><option value="">Nessun motivo</option></select>
+    </label>
+    <p class="nota">Ricorda di avvisare il cliente per telefono o WhatsApp.</p>
+  </div>
+  <footer><button class="btn" type="button" data-chiudi>Indietro</button><button class="btn rosso" type="submit">Annulla l'ordine</button></footer>
+</form></dialog>
+
+<!-- Dialog dettaglio ordine chiuso -->
+<dialog id="dlg-ordine"><div class="dlg"><header><h2 id="dett-titolo"></h2><button class="mini" type="button" data-chiudi aria-label="Chiudi">✕</button></header><div class="cont" id="dett-corpo"></div></div></dialog>
+
+<div id="stampa"></div>
+<div class="toast" id="toast" role="status" hidden></div>
+
+<script>
+(() => {
+const $ = (s, el = document) => el.querySelector(s);
+const $$ = (s, el = document) => [...el.querySelectorAll(s)];
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const euro = (c) => (c / 100).toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+const euroIn = (c) => (c / 100).toFixed(2).replace(".", ",");
+const GIORNI = ["Domenica", "Lunedì", "Martedì", "Mercoledì", "Giovedì", "Venerdì", "Sabato"];
+const local = { get(k, d) { try { return JSON.parse(localStorage.getItem("feras-admin:" + k)) ?? d; } catch { return d; } }, set(k, v) { try { localStorage.setItem("feras-admin:" + k, JSON.stringify(v)); } catch {} } };
+
+let toastT;
+function toast(msg, err = false) { const t = $("#toast"); t.textContent = msg; t.className = "toast" + (err ? " err" : ""); t.hidden = false; clearTimeout(toastT); toastT = setTimeout(() => (t.hidden = true), 3200); }
+
+async function api(path, { method = "GET", body } = {}) {
+  const r = await fetch("/api/admin" + path, { method, headers: body ? { "Content-Type": "application/json" } : {}, body: body ? JSON.stringify(body) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { showLogin(); throw new Error("Sessione scaduta: accedi di nuovo"); }
+  if (!r.ok) throw new Error(d.error || "Operazione non riuscita");
+  return d;
+}
+
+document.addEventListener("click", (e) => { const c = e.target.closest("[data-chiudi]"); if (c) c.closest("dialog").close(); });
+
+// ================= LOGIN =================
+function showLogin() { $("#app").hidden = true; $("#login").hidden = false; stopPolling(); }
+$("#form-login").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const f = e.target, err = $("#login-err"); err.hidden = true;
+  const r = await fetch("/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: f.username.value, password: f.password.value }) });
+  const d = await r.json().catch(() => ({}));
+  if (!r.ok) { err.textContent = d.error || "Accesso non riuscito"; err.hidden = false; return; }
+  f.password.value = ""; start();
+});
+$("#btn-esci").onclick = async () => { if (!confirm("Vuoi uscire da questo dispositivo?")) return; await fetch("/api/admin/logout", { method: "POST" }); showLogin(); };
+
+// ================= NAVIGAZIONE =================
+const loaders = {};
+function showTab() {
+  const tab = (location.hash || "#ordini").slice(1);
+  const valid = ["ordini", "menu", "impostazioni", "clienti", "statistiche"].includes(tab) ? tab : "ordini";
+  $$("[data-sez]").forEach((s) => (s.hidden = s.dataset.sez !== valid));
+  $$("[data-tab]").forEach((a) => a.classList.toggle("on", a.dataset.tab === valid));
+  loaders[valid]?.();
+}
+window.addEventListener("hashchange", showTab);
+
+// ================= SETTINGS (condivise) =================
+let SETTINGS = {};
+async function loadSettings() { SETTINGS = (await api("/settings")).settings; renderPausa(); return SETTINGS; }
+function renderPausa() {
+  const b = $("#btn-pausa"); b.classList.toggle("off", !!SETTINGS.ordering_paused);
+  $("#pausa-testo").textContent = SETTINGS.ordering_paused ? "Ordini in pausa" : "Ordini attivi";
+}
+$("#btn-pausa").onclick = async () => {
+  const pausa = !SETTINGS.ordering_paused;
+  if (!confirm(pausa ? "Mettere in pausa gli ordini online? I clienti vedranno il messaggio di pausa." : "Riattivare gli ordini online?")) return;
+  try { SETTINGS = (await api("/settings", { method: "PUT", body: { ordering_paused: pausa } })).settings; renderPausa(); toast(pausa ? "Ordini online in pausa" : "Ordini online attivi"); if (!$("[data-sez=impostazioni]").hidden) fillSettings(); }
+  catch (e) { toast(e.message, true); }
+};
+
+// ================= SUONO / ALLARME =================
+let audioCtx = null, suonoOn = local.get("suono", true), allarmeT = null;
+function unlockAudio() {
+  try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === "suspended") audioCtx.resume(); } catch {}
+  $("#sblocca-suono").hidden = true;
+}
+$("#sblocca-suono").addEventListener("click", () => { unlockAudio(); beep(); });
+document.addEventListener("pointerdown", () => { if (audioCtx?.state !== "running") unlockAudio(); }, { once: false, passive: true });
+function beep() {
+  if (!audioCtx || audioCtx.state !== "running") return;
+  const t0 = audioCtx.currentTime;
+  [0, .22, .44].forEach((d, i) => {
+    const o = audioCtx.createOscillator(), g = audioCtx.createGain();
+    o.type = "square"; o.frequency.value = i === 2 ? 1320 : 990;
+    g.gain.setValueAtTime(.0001, t0 + d); g.gain.exponentialRampToValueAtTime(.35, t0 + d + .02); g.gain.exponentialRampToValueAtTime(.0001, t0 + d + .18);
+    o.connect(g).connect(audioCtx.destination); o.start(t0 + d); o.stop(t0 + d + .2);
+  });
+  navigator.vibrate?.([200, 100, 200]);
+}
+function renderSuono() { $("#btn-suono").textContent = suonoOn ? "🔔" : "🔕"; $("#btn-suono").title = suonoOn ? "Suono attivo: tocca per silenziare" : "Suono disattivato"; }
+$("#btn-suono").onclick = () => { suonoOn = !suonoOn; local.set("suono", suonoOn); renderSuono(); if (suonoOn) { unlockAudio(); beep(); } else stopAllarme(); };
+function startAllarme() {
+  if (allarmeT) return;
+  const ring = () => { if (suonoOn && SETTINGS.sound_enabled !== false) beep(); };
+  ring(); allarmeT = setInterval(ring, 4000);
+}
+function stopAllarme() { clearInterval(allarmeT); allarmeT = null; }
+
+// ================= ORDINI =================
+let ORDERS = [], seen = new Set(local.get("visti", [])), pollT = null, primoGiro = true, storico = "";
+const TIPO = { delivery: "Consegna", takeaway: "Asporto" };
+const STATO_LABEL = { nuovo: "Da confermare", accettato: "In preparazione", pronto: "Pronto", completato: "Completato", annullato: "Annullato" };
+
+function articoliHtml(items) {
+  return `<ul class="articoli">${items.map((it) => `<li><span class="q">${it.qty}×</span>${esc(it.name)}
+    ${it.removed.length ? `<span class="senza">SENZA: ${esc(it.removed.join(", "))}</span>` : ""}
+    ${it.extras.length ? `<span class="extra">+ ${esc(it.extras.join(", "))}</span>` : ""}
+    ${it.note ? `<span class="nt">“${esc(it.note)}”</span>` : ""}</li>`).join("")}</ul>`;
+}
+function waLink(o, testo) {
+  let n = o.customer_phone.replace(/[^\d+]/g, "");
+  if (n.startsWith("+")) n = n.slice(1); else if (n.startsWith("00")) n = n.slice(2); else n = "39" + n;
+  return `https://wa.me/${n}?text=${encodeURIComponent(testo)}`;
+}
+function waTesto(o) {
+  const nome = o.customer_name.split(" ")[0];
+  if (o.status === "nuovo" || o.status === "accettato") return `Ciao ${nome}, è Fera's Pizza_Lab: abbiamo ricevuto il tuo ordine #${o.number} per le ${o.slot}. Grazie!`;
+  if (o.status === "pronto") return o.order_type === "delivery" ? `Ciao ${nome}, il tuo ordine #${o.number} di Fera's è in consegna!` : `Ciao ${nome}, il tuo ordine #${o.number} è pronto: ti aspettiamo in Corso Butera!`;
+  return `Ciao ${nome}, è Fera's Pizza_Lab per il tuo ordine #${o.number}.`;
+}
+function cardHtml(o) {
+  const del = o.order_type === "delivery";
+  const next = { nuovo: ["accettato", "Conferma"], accettato: ["pronto", del ? "Parte la consegna" : "Pronto per il ritiro"], pronto: ["completato", del ? "Consegnato" : "Ritirato"] }[o.status];
+  const maps = del ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(o.address + ", Bagheria")}` : "";
+  const ieri = o.day !== TODAY ? `<span class="stato annullato">${esc(o.day.split("-").reverse().join("/"))}</span>` : "";
+  return `<article class="ordine ${o.status}${o.status === "nuovo" ? " lampeggia" : ""}" data-id="${esc(o.id)}">
+    <div class="testa"><span class="num">#${o.number}</span><span class="tipo ${o.order_type}">${TIPO[o.order_type]}</span>${ieri}<span class="ora" title="Orario richiesto">${esc(o.slot)}</span></div>
+    <div class="corpo">
+      <div class="cliente"><strong>${esc(o.customer_name)}</strong><a href="tel:${esc(o.customer_phone.replace(/[^\d+]/g, ""))}">📞 ${esc(o.customer_phone)}</a>
+        ${del ? `<a href="${maps}" target="_blank" rel="noopener">📍 ${esc(o.address)}</a>` : ""}</div>
+      ${articoliHtml(o.items)}
+      ${o.notes ? `<div class="note-ordine">📝 ${esc(o.notes)}</div>` : ""}
+      <div class="totale-ord"><span>${euro(o.total_cents)} <small>· ${o.payment === "pos" ? "Carta (POS)" : "Contanti"}</small></span><small>ricevuto alle ${new Date(o.created_at).toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Rome" })}</small></div>
+    </div>
+    <div class="azioni">
+      ${next ? `<button class="btn ${o.status === "nuovo" ? "pri" : "nero"} grande" type="button" data-stato="${next[0]}">${next[1]}</button>` : ""}
+      <button class="btn" type="button" data-stampa>Stampa</button>
+      <a class="btn" href="${waLink(o, waTesto(o))}" target="_blank" rel="noopener">WhatsApp</a>
+      <button class="btn rosso" type="button" data-annulla>Annulla</button>
+    </div></article>`;
+}
+let TODAY = "";
+function renderOrders() {
+  const attivi = storico ? [] : ORDERS.filter((o) => ["nuovo", "accettato", "pronto"].includes(o.status));
+  const byCreated = (a, b) => a.slot.localeCompare(b.slot) || a.created_at - b.created_at;
+  for (const st of ["nuovo", "accettato", "pronto"]) {
+    const list = attivi.filter((o) => o.status === st).sort(byCreated);
+    $("#col-" + st).innerHTML = list.length ? list.map(cardHtml).join("") : `<div class="vuota">${{ nuovo: "Nessun ordine da confermare", accettato: "Niente in preparazione", pronto: "Niente in uscita" }[st]}</div>`;
+    $("#n-" + st).textContent = list.length;
+  }
+  $("#colonne").hidden = !!storico;
+  const chiusi = storico ? ORDERS : ORDERS.filter((o) => ["completato", "annullato"].includes(o.status) && o.day === TODAY);
+  $("#titolo-chiusi").textContent = storico ? "Ordini del " + storico.split("-").reverse().join("/") : "Chiusi oggi";
+  $("#titolo-ordini").textContent = storico ? "Storico ordini" : "Ordini di oggi";
+  $("#tab-chiusi").innerHTML = chiusi.length ? chiusi.map((o) => `<tr data-dett="${esc(o.id)}"><td><strong>#${o.number}</strong></td><td>${esc(o.slot)}</td><td>${esc(o.customer_name)}</td><td>${TIPO[o.order_type]}</td><td>${euro(o.total_cents)}</td><td><span class="stato ${o.status}">${STATO_LABEL[o.status]}</span></td></tr>`).join("")
+    : `<tr><td colspan="6" class="nota">Nessun ordine.</td></tr>`;
+  const validi = ORDERS.filter((o) => o.status !== "annullato" && (storico || o.day === TODAY));
+  $("#riepilogo-oggi").textContent = `${validi.length} ordini · ${euro(validi.reduce((s, o) => s + o.total_cents, 0))}`;
+  const nuovi = ORDERS.filter((o) => o.status === "nuovo").length;
+  $("#badge-nuovi").hidden = !nuovi; $("#badge-nuovi").textContent = nuovi;
+  document.title = (nuovi ? `(${nuovi}) 🔴 ` : "") + "Gestione · Fera's";
+  if (nuovi) startAllarme(); else stopAllarme();
+}
+async function loadOrders() {
+  try {
+    const d = await api("/orders" + (storico ? "?date=" + storico : ""));
+    ORDERS = d.orders; if (d.today) TODAY = d.today;
+    if (!storico) {
+      const nuovi = ORDERS.filter((o) => o.status === "nuovo" && !seen.has(o.id));
+      if (nuovi.length && !primoGiro) notificaLocale(nuovi);
+      ORDERS.forEach((o) => seen.add(o.id)); local.set("visti", [...seen].slice(-400));
+      primoGiro = false;
+    }
+    renderOrders();
+    $("#ultimo-agg").textContent = "Aggiornato alle " + new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  } catch (e) { $("#ultimo-agg").textContent = "⚠️ " + e.message; }
+}
+async function notificaLocale(nuovi) {
+  // Notifica di sistema anche se la scheda è in secondo piano (le push arrivano a parte).
+  if (document.visibilityState === "visible" || !("Notification" in window) || Notification.permission !== "granted") return;
+  const reg = await navigator.serviceWorker?.getRegistration();
+  if (!reg) return;
+  for (const o of nuovi) reg.showNotification(`🍕 Nuovo ordine #${o.number} · ${euro(o.total_cents)}`, { body: `${TIPO[o.order_type]} alle ${o.slot} · ${o.customer_name}`, tag: "order:" + o.id, icon: "/assets/icon-192.png" });
+}
+function startPolling() { stopPolling(); loadOrders(); pollT = setInterval(() => { if (!storico) loadOrders(); }, 8000); }
+function stopPolling() { clearInterval(pollT); stopAllarme(); }
+document.addEventListener("visibilitychange", () => { if (!document.hidden && !$("#app").hidden) loadOrders(); });
+navigator.serviceWorker?.addEventListener("message", (e) => { if (e.data?.type === "push") loadOrders(); if (e.data?.type === "open-orders") location.hash = "#ordini"; });
+loaders.ordini = () => {};
+
+$("#data-storico").addEventListener("change", (e) => { storico = e.target.value && e.target.value !== TODAY ? e.target.value : ""; loadOrders(); });
+
+$("#colonne").addEventListener("click", async (e) => {
+  const card = e.target.closest(".ordine"); if (!card) return;
+  const o = ORDERS.find((x) => x.id === card.dataset.id); if (!o) return;
+  const s = e.target.closest("[data-stato]");
+  if (s) {
+    s.disabled = true;
+    try { await api("/orders", { method: "PATCH", body: { id: o.id, status: s.dataset.stato } }); o.status = s.dataset.stato; renderOrders(); if (s.dataset.stato === "accettato" && local.get("stampaAuto", false)) stampa(o); }
+    catch (err) { toast(err.message, true); s.disabled = false; }
+  }
+  if (e.target.closest("[data-stampa]")) stampa(o);
+  if (e.target.closest("[data-annulla]")) apriAnnulla(o);
+});
+let daAnnullare = null;
+function apriAnnulla(o) { daAnnullare = o; $("#annulla-num").textContent = "#" + o.number; $("#dlg-annulla").showModal(); }
+$("#form-annulla").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  try { await api("/orders", { method: "PATCH", body: { id: daAnnullare.id, status: "annullato", reason: $("#annulla-motivo").value } }); $("#dlg-annulla").close(); toast("Ordine #" + daAnnullare.number + " annullato"); loadOrders(); $("#dlg-ordine").close(); }
+  catch (err) { toast(err.message, true); }
+});
+$("#tab-chiusi").addEventListener("click", (e) => {
+  const tr = e.target.closest("[data-dett]"); if (!tr) return;
+  const o = ORDERS.find((x) => x.id === tr.dataset.dett); if (!o) return;
+  $("#dett-titolo").textContent = `#${o.number} · ${o.customer_name}`;
+  $("#dett-corpo").innerHTML = cardHtml(o).replace('class="ordine ', 'style="border:0;margin:0" class="ordine ') +
+    `<p class="nota">Stato: <strong>${STATO_LABEL[o.status]}</strong>${o.cancel_reason ? " · " + esc(o.cancel_reason) : ""}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:10px">${["accettato", "pronto", "completato"].filter((s) => s !== o.status).map((s) => `<button class="btn piccolo" data-riporta="${s}">Riporta a "${STATO_LABEL[s]}"</button>`).join("")}</div>`;
+  $("#dlg-ordine").showModal();
+});
+$("#dett-corpo").addEventListener("click", async (e) => {
+  const id = e.target.closest(".ordine")?.dataset.id || $("#dett-corpo .ordine")?.dataset.id;
+  const o = ORDERS.find((x) => x.id === id); if (!o) return;
+  if (e.target.closest("[data-stampa]")) stampa(o);
+  if (e.target.closest("[data-annulla]")) apriAnnulla(o);
+  const r = e.target.closest("[data-riporta], [data-stato]");
+  if (r) { try { await api("/orders", { method: "PATCH", body: { id: o.id, status: r.dataset.riporta || r.dataset.stato } }); $("#dlg-ordine").close(); loadOrders(); } catch (err) { toast(err.message, true); } }
+});
+
+function stampa(o) {
+  const del = o.order_type === "delivery";
+  $("#stampa").innerHTML = `<div style="text-align:center"><strong>FERA'S PIZZA_LAB</strong><br>${esc(SETTINGS.shop_phone || "")}</div><hr>
+    <div class="r"><h1>#${o.number}</h1><span class="grande">${esc(o.slot)}</span></div>
+    <div class="grande">${del ? "CONSEGNA" : "ASPORTO"}</div>
+    <div>${esc(o.customer_name)} · ${esc(o.customer_phone)}</div>${del ? `<div><strong>${esc(o.address)}</strong></div>` : ""}<hr>
+    ${o.items.map((it) => `<div class="r"><span><strong>${it.qty}× ${esc(it.name)}</strong></span><span>${euroIn(it.unit_cents * it.qty)}</span></div>
+      ${it.removed.length ? `<div>  SENZA ${esc(it.removed.join(", "))}</div>` : ""}${it.extras.length ? `<div>  + ${esc(it.extras.join(", "))}</div>` : ""}${it.note ? `<div>  "${esc(it.note)}"</div>` : ""}`).join("")}
+    <hr>${o.notes ? `<div><strong>NOTE:</strong> ${esc(o.notes)}</div><hr>` : ""}
+    ${o.discount_cents ? `<div class="r"><span>Sconto online</span><span>-${euroIn(o.discount_cents)}</span></div>` : ""}
+    ${o.delivery_cents ? `<div class="r"><span>Consegna</span><span>${euroIn(o.delivery_cents)}</span></div>` : ""}
+    <div class="r grande"><span>TOTALE</span><span>€ ${euroIn(o.total_cents)}</span></div>
+    <div>Pagamento: ${o.payment === "pos" ? "CARTA (POS)" : "CONTANTI"}</div>
+    <div style="font-size:11px;margin-top:6px">${new Date(o.created_at).toLocaleString("it-IT", { timeZone: "Europe/Rome" })} · ordine online</div>`;
+  window.print();
+}
+
+// Wake lock: lo schermo del tablet resta acceso
+let wakeLock = null;
+async function setWake(on) {
+  try {
+    if (on && "wakeLock" in navigator) { wakeLock = await navigator.wakeLock.request("screen"); }
+    else { await wakeLock?.release(); wakeLock = null; }
+  } catch { if (on) toast("Questo dispositivo non permette di tenere lo schermo acceso", true); }
+}
+$("#wake").checked = local.get("wake", false);
+$("#wake").addEventListener("change", (e) => { local.set("wake", e.target.checked); setWake(e.target.checked); });
+document.addEventListener("visibilitychange", () => { if (!document.hidden && $("#wake").checked) setWake(true); });
+
+// ================= MENU =================
+let MENU = { categories: [], products: [] }, catSel = local.get("catSel", null);
+async function loadMenu() { MENU = await api("/menu"); if (!MENU.categories.find((c) => c.id === catSel)) catSel = MENU.categories[0]?.id ?? null; renderMenu(); }
+loaders.menu = loadMenu;
+function renderMenu() {
+  const q = $("#cerca-prod").value.trim().toLowerCase();
+  $("#lista-cat").innerHTML = MENU.categories.map((c, i) => `<li class="${c.id === catSel && !q ? "on" : ""}${c.active ? "" : " spenta"}" data-cat="${c.id}">
+    <span class="n">${esc(c.name)} <span class="c">${MENU.products.filter((p) => p.category_id === c.id).length}</span></span>
+    <button class="mini" type="button" data-su="${i}" aria-label="Sposta su" ${i === 0 ? "disabled" : ""}>↑</button>
+    <button class="mini" type="button" data-giu="${i}" aria-label="Sposta giù" ${i === MENU.categories.length - 1 ? "disabled" : ""}>↓</button></li>`).join("");
+  const cat = MENU.categories.find((c) => c.id === catSel);
+  $("#cat-titolo").textContent = q ? `Risultati per "${$("#cerca-prod").value}"` : cat ? cat.name : "Nessuna categoria";
+  $("#modifica-cat").hidden = !!q || !cat;
+  const list = q ? MENU.products.filter((p) => (p.name + " " + p.description).toLowerCase().includes(q)) : MENU.products.filter((p) => p.category_id === catSel);
+  $("#tab-prodotti").innerHTML = list.length ? list.map((p, i) => `<tr class="${p.active ? "" : "nascosto"}" data-prod="${p.id}">
+    <td class="col-img">${p.image_id ? `<img src="/img/${esc(p.image_id)}" alt="">` : ""}</td>
+    <td><div class="nome">${esc(p.name)}${p.active ? "" : " <span class='stato'>nascosto</span>"}</div><div class="desc">${esc(p.description)}</div></td>
+    <td class="prezzo">${euro(p.price_cents)}</td>
+    <td><label class="switch" title="Disponibile oggi"><input type="checkbox" data-disp ${p.available ? "checked" : ""}><span class="tr"></span><span class="sr">${p.available ? "Disponibile" : "Terminato"}</span></label></td>
+    <td><div class="azioni-riga">${q ? "" : `<button class="mini" type="button" data-psu="${i}" aria-label="Sposta su" ${i === 0 ? "disabled" : ""}>↑</button><button class="mini" type="button" data-pgiu="${i}" aria-label="Sposta giù" ${i === list.length - 1 ? "disabled" : ""}>↓</button>`}
+      <button class="btn piccolo" type="button" data-modifica>Modifica</button></div></td></tr>`).join("")
+    : `<tr><td class="nota">Nessun prodotto. Premi "Nuovo prodotto" per aggiungerne uno.</td></tr>`;
+}
+$("#cerca-prod").addEventListener("input", renderMenu);
+$("#lista-cat").addEventListener("click", async (e) => {
+  const su = e.target.closest("[data-su]"), giu = e.target.closest("[data-giu]");
+  if (su || giu) {
+    const i = Number((su || giu).dataset[su ? "su" : "giu"]), j = su ? i - 1 : i + 1;
+    [MENU.categories[i], MENU.categories[j]] = [MENU.categories[j], MENU.categories[i]];
+    renderMenu();
+    try { await api("/reorder", { method: "POST", body: { type: "categories", ids: MENU.categories.map((c) => c.id) } }); } catch (err) { toast(err.message, true); loadMenu(); }
+    return;
+  }
+  const li = e.target.closest("[data-cat]"); if (!li) return;
+  catSel = Number(li.dataset.cat); local.set("catSel", catSel); $("#cerca-prod").value = ""; renderMenu();
+});
+$("#tab-prodotti").addEventListener("click", async (e) => {
+  const tr = e.target.closest("[data-prod]"); if (!tr) return;
+  const p = MENU.products.find((x) => x.id === Number(tr.dataset.prod));
+  if (e.target.closest("[data-modifica]")) return apriProdotto(p);
+  const su = e.target.closest("[data-psu]"), giu = e.target.closest("[data-pgiu]");
+  if (su || giu) {
+    const list = MENU.products.filter((x) => x.category_id === catSel);
+    const i = Number((su || giu).dataset[su ? "psu" : "pgiu"]), j = su ? i - 1 : i + 1;
+    [list[i], list[j]] = [list[j], list[i]];
+    const others = MENU.products.filter((x) => x.category_id !== catSel);
+    MENU.products = [...others, ...list];
+    renderMenu();
+    try { await api("/reorder", { method: "POST", body: { type: "products", ids: list.map((x) => x.id) } }); } catch (err) { toast(err.message, true); loadMenu(); }
+  }
+});
+$("#tab-prodotti").addEventListener("change", async (e) => {
+  if (!e.target.matches("[data-disp]")) return;
+  const p = MENU.products.find((x) => x.id === Number(e.target.closest("[data-prod]").dataset.prod));
+  try { await api("/products", { method: "PATCH", body: { id: p.id, available: e.target.checked } }); p.available = e.target.checked ? 1 : 0; toast(`${p.name}: ${e.target.checked ? "disponibile" : "terminato per oggi"}`); renderMenu(); }
+  catch (err) { toast(err.message, true); e.target.checked = !e.target.checked; }
+});
+
+// Prodotto
+const fp = $("#form-prod");
+function apriProdotto(p) {
+  fp.reset();
+  $("#prod-cat").innerHTML = MENU.categories.map((c) => `<option value="${c.id}">${esc(c.name)}</option>`).join("");
+  $("#prod-titolo").textContent = p ? "Modifica prodotto" : "Nuovo prodotto";
+  fp.elements.id.value = p?.id || "";
+  fp.elements.name.value = p?.name || "";
+  fp.elements.price.value = p ? euroIn(p.price_cents) : "";
+  fp.elements.category_id.value = p?.category_id || catSel || "";
+  fp.elements.description.value = p?.description || "";
+  fp.elements.tags.value = p?.tags ? p.tags.split(",").join(", ") : "";
+  fp.elements.available.checked = p ? !!p.available : true;
+  fp.elements.active.checked = p ? !!p.active : true;
+  setFoto(p?.image_id || "");
+  $("#prod-elimina").hidden = !p;
+  $("#dlg-prod").showModal();
+}
+function setFoto(id) {
+  fp.elements.image_id.value = id; const img = $("#prod-foto");
+  img.hidden = !id; if (id) img.src = "/img/" + id; $("#prod-foto-via").hidden = !id;
+}
+$("#prod-foto-via").onclick = () => { setFoto(""); $("#prod-file").value = ""; };
+$("#nuovo-prod").onclick = () => apriProdotto(null);
+$("#prod-file").addEventListener("change", async (e) => {
+  const file = e.target.files[0]; if (!file) return;
+  try {
+    const bmp = await createImageBitmap(file);
+    const max = 900, k = Math.min(1, max / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas"); c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    c.getContext("2d").drawImage(bmp, 0, 0, c.width, c.height);
+    let dataUrl = c.toDataURL("image/webp", .82);
+    if (!dataUrl.startsWith("data:image/webp")) dataUrl = c.toDataURL("image/jpeg", .82);
+    toast("Carico la foto…");
+    const r = await api("/images", { method: "POST", body: { dataUrl } });
+    setFoto(r.id); toast("Foto caricata");
+  } catch (err) { toast(err.message || "Foto non caricata", true); }
+});
+fp.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const el = fp.elements;
+  try {
+    await api("/products", { method: "POST", body: {
+      id: el.id.value ? Number(el.id.value) : undefined, name: el.name.value, price: el.price.value, category_id: Number(el.category_id.value),
+      description: el.description.value, tags: el.tags.value, image_id: el.image_id.value || null, available: el.available.checked, active: el.active.checked } });
+    $("#dlg-prod").close(); toast("Prodotto salvato"); loadMenu();
+  } catch (err) { toast(err.message, true); }
+});
+$("#prod-elimina").onclick = async () => {
+  if (!confirm("Eliminare definitivamente questo prodotto? Se vuoi solo nasconderlo per un po', togli \"Visibile nel menu\".")) return;
+  try { await api("/products?id=" + fp.elements.id.value, { method: "DELETE" }); $("#dlg-prod").close(); toast("Prodotto eliminato"); loadMenu(); } catch (err) { toast(err.message, true); }
+};
+
+// Categoria
+const fc = $("#form-cat");
+function rigaExtra(x = {}) {
+  const d = document.createElement("div"); d.className = "extra-riga";
+  d.innerHTML = `<input type="text" placeholder="Nome" value="${esc(x.name || "")}" maxlength="60" aria-label="Nome aggiunta"><input type="text" inputmode="decimal" placeholder="€" value="${x.price_cents != null ? euroIn(x.price_cents) : ""}" aria-label="Prezzo aggiunta"><button class="mini" type="button" aria-label="Rimuovi">✕</button>`;
+  d.querySelector("button").onclick = () => d.remove();
+  $("#extra-righe").append(d);
+}
+function apriCategoria(c) {
+  fc.reset(); $("#extra-righe").innerHTML = "";
+  $("#cat-dlg-titolo").textContent = c ? "Modifica categoria" : "Nuova categoria";
+  fc.elements.id.value = c?.id || ""; fc.elements.name.value = c?.name || ""; fc.elements.description.value = c?.description || "";
+  fc.elements.active.checked = c ? !!c.active : true; fc.elements.removable.checked = c ? !!c.removable : true;
+  (c?.extras || []).forEach(rigaExtra);
+  $("#cat-elimina").hidden = !c;
+  $("#dlg-cat").showModal();
+}
+$("#extra-aggiungi").onclick = () => rigaExtra();
+$("#nuova-cat").onclick = () => apriCategoria(null);
+$("#modifica-cat").onclick = () => apriCategoria(MENU.categories.find((c) => c.id === catSel));
+fc.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const extras = $$("#extra-righe .extra-riga").map((r) => { const [n, p] = r.querySelectorAll("input"); return { name: n.value.trim(), price: (p.value || "0").replace(",", ".") }; }).filter((x) => x.name);
+  try {
+    const r = await api("/categories", { method: "POST", body: { id: fc.elements.id.value ? Number(fc.elements.id.value) : undefined, name: fc.elements.name.value, description: fc.elements.description.value, active: fc.elements.active.checked, removable: fc.elements.removable.checked, extras } });
+    catSel = r.id; local.set("catSel", catSel); $("#dlg-cat").close(); toast("Categoria salvata"); loadMenu();
+  } catch (err) { toast(err.message, true); }
+});
+$("#cat-elimina").onclick = async () => {
+  if (!confirm("Eliminare la categoria? Deve essere vuota.")) return;
+  try { await api("/categories?id=" + fc.elements.id.value, { method: "DELETE" }); $("#dlg-cat").close(); toast("Categoria eliminata"); catSel = null; loadMenu(); } catch (err) { toast(err.message, true); }
+};
+
+// ================= IMPOSTAZIONI =================
+const fi = $("#form-imp");
+let chiusure = [];
+function fillSettings() {
+  for (const el of fi.elements) {
+    if (!el.name || !(el.name in SETTINGS)) continue;
+    if (el.type === "checkbox") el.checked = !!SETTINGS[el.name];
+    else if (el.dataset.euro !== undefined) el.value = euroIn(SETTINGS[el.name] || 0);
+    else el.value = SETTINGS[el.name] ?? "";
+  }
+  const ed = $("#orari-editor"); ed.innerHTML = "";
+  for (const d of [1, 2, 3, 4, 5, 6, 0]) {
+    const row = document.createElement("div"); row.className = "orari-giorno"; row.dataset.giorno = d;
+    row.innerHTML = `<strong>${GIORNI[d]}</strong><div class="fasce"></div>`;
+    const fasce = row.querySelector(".fasce");
+    const addFascia = (a = "18:30", b = "23:30") => {
+      const s = document.createElement("span"); s.className = "fascia"; s.style.cssText = "display:inline-flex;gap:4px;align-items:center";
+      s.innerHTML = `<input type="time" value="${a}" aria-label="Apertura ${GIORNI[d]}">–<input type="time" value="${b}" aria-label="Chiusura ${GIORNI[d]}"><button class="mini" type="button" aria-label="Rimuovi fascia">✕</button>`;
+      s.querySelector("button").onclick = () => { s.remove(); refreshAdd(); };
+      fasce.insertBefore(s, fasce.querySelector(".add")); refreshAdd();
+    };
+    const add = document.createElement("button"); add.type = "button"; add.className = "btn piccolo add"; add.textContent = "+ fascia";
+    add.onclick = () => addFascia("12:00", "15:00");
+    fasce.append(add);
+    const refreshAdd = () => { const n = fasce.querySelectorAll(".fascia").length; add.hidden = n >= 2; add.textContent = n ? "+ fascia" : "Chiuso · aggiungi orario"; };
+    (SETTINGS.hours?.[d] || []).forEach(([a, b]) => addFascia(a, b));
+    refreshAdd();
+    ed.append(row);
+  }
+  chiusure = [...(SETTINGS.closed_dates || [])]; renderChiusure();
+}
+function renderChiusure() {
+  const oggi = new Date().toISOString().slice(0, 10);
+  chiusure = chiusure.filter((d) => d >= oggi);
+  $("#date-chiuse").innerHTML = chiusure.length ? chiusure.map((d) => `<span>${d.split("-").reverse().join("/")}<button type="button" data-via="${d}" aria-label="Rimuovi">✕</button></span>`).join("") : `<span class="nota" style="background:none;color:var(--grigio)">Nessuna chiusura programmata</span>`;
+}
+$("#date-chiuse").addEventListener("click", (e) => { const b = e.target.closest("[data-via]"); if (b) { chiusure = chiusure.filter((d) => d !== b.dataset.via); renderChiusure(); } });
+$("#aggiungi-chiusura").onclick = () => { const v = $("#nuova-chiusura").value; if (v && !chiusure.includes(v)) { chiusure.push(v); chiusure.sort(); renderChiusure(); } $("#nuova-chiusura").value = ""; };
+loaders.impostazioni = async () => { await loadSettings(); fillSettings(); refreshPush(); };
+fi.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const body = {};
+  for (const el of fi.elements) {
+    if (!el.name) continue;
+    if (el.type === "checkbox") body[el.name] = el.checked;
+    else if (el.dataset.euro !== undefined) body[el.name] = Math.round(Number((el.value || "0").replace(",", ".")) * 100);
+    else if (el.type === "number") body[el.name] = Number(el.value || 0);
+    else body[el.name] = el.value;
+  }
+  body.hours = {};
+  for (const row of $$("#orari-editor .orari-giorno")) {
+    body.hours[row.dataset.giorno] = $$(".fascia", row).map((s) => [...s.querySelectorAll("input")].map((i) => i.value)).filter(([a, b]) => a && b);
+  }
+  body.closed_dates = chiusure;
+  try { SETTINGS = (await api("/settings", { method: "PUT", body })).settings; renderPausa(); fillSettings(); toast("Impostazioni salvate"); $("#imp-esito").textContent = "Salvate alle " + new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }); }
+  catch (err) { toast(err.message, true); }
+});
+$("#pw-salva").onclick = async () => {
+  try { await api("/password", { method: "POST", body: { current: $("#pw-attuale").value, next: $("#pw-nuova").value } }); $("#pw-attuale").value = $("#pw-nuova").value = ""; toast("Password cambiata"); }
+  catch (err) { toast(err.message, true); }
+};
+
+// Push
+const b64ToBytes = (s) => { const p = "=".repeat((4 - (s.length % 4)) % 4); const r = atob((s + p).replace(/-/g, "+").replace(/_/g, "/")); return Uint8Array.from(r, (c) => c.charCodeAt(0)); };
+async function swReg() { if (!("serviceWorker" in navigator)) return null; return navigator.serviceWorker.register("/push-sw.js", { scope: "/" }); }
+async function refreshPush() {
+  const st = $("#push-stato");
+  const supportate = "serviceWorker" in navigator && "PushManager" in window && "Notification" in window;
+  try {
+    const info = await api("/push");
+    if (!info.configured) { st.textContent = "Le notifiche non sono ancora configurate sul server (chiavi VAPID mancanti)."; $("#push-attiva").hidden = true; return; }
+    if (!supportate) { st.textContent = "Questo browser non supporta le notifiche push. Su iPhone aggiungi prima il pannello alla schermata Home."; $("#push-attiva").hidden = true; return; }
+    const reg = await swReg(); const sub = await reg.pushManager.getSubscription();
+    const attivo = Notification.permission === "granted" && !!sub;
+    st.textContent = (attivo ? "✅ Attive su questo dispositivo." : Notification.permission === "denied" ? "⛔ Notifiche bloccate nelle impostazioni del browser per questo sito." : "Non attive su questo dispositivo.") + ` Dispositivi collegati: ${info.devices}.`;
+    $("#push-attiva").hidden = attivo; $("#push-prova").hidden = !attivo; $("#push-disattiva").hidden = !attivo;
+    $("#suggerisci-push").hidden = attivo || Notification.permission === "denied";
+    return info;
+  } catch (e) { st.textContent = e.message; }
+}
+$("#push-attiva").onclick = async () => {
+  try {
+    const info = await api("/push");
+    const perm = await Notification.requestPermission();
+    if (perm !== "granted") throw new Error("Permesso negato: abilita le notifiche per questo sito");
+    const reg = await swReg(); await navigator.serviceWorker.ready;
+    let sub = await reg.pushManager.getSubscription();
+    if (!sub) sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: b64ToBytes(info.publicKey) });
+    await api("/push", { method: "POST", body: { action: "subscribe", subscription: sub.toJSON(), label: navigator.userAgent.slice(0, 80) } });
+    toast("Notifiche attivate"); refreshPush();
+  } catch (e) { toast(e.message, true); }
+};
+$("#push-prova").onclick = async () => {
+  try { const sub = await (await swReg()).pushManager.getSubscription(); await api("/push", { method: "POST", body: { action: "test", endpoint: sub.endpoint } }); toast("Prova inviata: deve arrivare tra pochi secondi"); }
+  catch (e) { toast(e.message, true); }
+};
+$("#push-disattiva").onclick = async () => {
+  try { const sub = await (await swReg()).pushManager.getSubscription(); if (sub) { await api("/push", { method: "POST", body: { action: "unsubscribe", endpoint: sub.endpoint } }); await sub.unsubscribe(); } toast("Notifiche disattivate"); refreshPush(); }
+  catch (e) { toast(e.message, true); }
+};
+
+// ================= CLIENTI =================
+let cliPage = 1, cliT;
+async function loadClienti() {
+  try {
+    const d = await api(`/customers?page=${cliPage}&q=${encodeURIComponent($("#cerca-clienti").value)}&sort=${$("#ordina-clienti").value}`);
+    $("#tab-clienti").innerHTML = d.customers.length ? d.customers.map((c) => `<tr><td><strong>${esc(c.name)}</strong></td><td><a href="tel:${esc(c.phone)}">${esc(c.phone)}</a></td><td>${esc(c.address)}</td><td class="num">${c.order_count}</td><td class="num">${euro(c.spent_cents)}</td><td>${new Date(c.last_at).toLocaleDateString("it-IT", { timeZone: "Europe/Rome" })}</td></tr>`).join("") : `<tr><td colspan="6" class="nota">Nessun cliente ancora.</td></tr>`;
+    $("#clienti-conteggio").textContent = `${d.total} clienti`;
+    $("#clienti-prec").disabled = cliPage <= 1; $("#clienti-succ").disabled = cliPage * 50 >= d.total;
+  } catch (e) { toast(e.message, true); }
+}
+loaders.clienti = loadClienti;
+$("#cerca-clienti").addEventListener("input", () => { clearTimeout(cliT); cliT = setTimeout(() => { cliPage = 1; loadClienti(); }, 300); });
+$("#ordina-clienti").addEventListener("change", () => { cliPage = 1; loadClienti(); });
+$("#clienti-prec").onclick = () => { cliPage--; loadClienti(); };
+$("#clienti-succ").onclick = () => { cliPage++; loadClienti(); };
+
+// ================= STATISTICHE =================
+async function loadStats() {
+  try {
+    const s = await api("/stats?days=" + $("#periodo").value);
+    $("#kpi").innerHTML = `<div><strong>${s.orders}</strong><span>ordini</span></div><div><strong>${euro(s.revenue)}</strong><span>incasso</span></div><div><strong>${euro(s.average)}</strong><span>scontrino medio</span></div><div><strong>${s.delivery} / ${s.takeaway}</strong><span>consegne / asporto</span></div>`;
+    const max = Math.max(1, ...s.series.map((x) => x.revenue));
+    $("#grafico").innerHTML = s.series.map((x) => `<div style="height:${(x.revenue / max) * 100}%" title="${x.day.split("-").reverse().join("/")}: ${x.orders} ordini, ${euro(x.revenue)}"></div>`).join("");
+    const f = (d) => d.split("-").reverse().slice(0, 2).join("/");
+    $("#asse").innerHTML = `<span>${f(s.series[0].day)}</span><span>${f(s.series[s.series.length - 1].day)}</span>`;
+    const hmax = Math.max(1, ...s.hours.map((h) => h.n));
+    $("#orari-punta").innerHTML = s.hours.length ? s.hours.map((h) => `<div><span>${h.hour}</span><i style="width:${(h.n / hmax) * 100}%"></i><strong>${h.n}</strong></div>`).join("") : `<p class="nota">Ancora nessun dato.</p>`;
+    $("#top-prodotti").innerHTML = s.top.length ? s.top.map((p) => `<tr><td>${esc(p.name)}</td><td class="num">${p.qty}</td><td class="num">${euro(p.revenue)}</td></tr>`).join("") : `<tr><td colspan="3" class="nota">Ancora nessuna vendita nel periodo.</td></tr>`;
+  } catch (e) { toast(e.message, true); }
+}
+loaders.statistiche = loadStats;
+$("#periodo").addEventListener("change", loadStats);
+
+// ================= AVVIO =================
+async function start() {
+  $("#login").hidden = true; $("#app").hidden = false;
+  renderSuono();
+  try { await loadSettings(); } catch { return; }
+  $("#sblocca-suono").hidden = audioCtx?.state === "running";
+  showTab(); startPolling();
+  if ($("#wake").checked) setWake(true);
+  swReg().catch(() => {});
+  refreshPush();
+}
+fetch("/api/admin/me").then((r) => (r.ok ? start() : showLogin())).catch(showLogin);
+})();
+</script>
+</body>
+</html>

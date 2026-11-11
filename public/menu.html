@@ -1,0 +1,469 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Menu e ordini online · Fera's Pizza_Lab Bagheria</title>
+<meta name="description" content="Il menu completo di Fera's Pizza_Lab: ordina online pizze, hamburger, fritti e bevande per l'asporto o la consegna a Bagheria.">
+<meta name="theme-color" content="#ead9a8">
+<link rel="icon" href="/assets/icon-192.png">
+<link rel="stylesheet" href="/assets/site.css">
+<style>
+  body { background: var(--carta); }
+  .testa { position: sticky; top: 0; z-index: 30; background: var(--tufo); border-bottom: 1px solid var(--linea); }
+  .testa .in { max-width: 1240px; margin: 0 auto; padding: 10px 16px; display: flex; align-items: center; gap: 14px; }
+  .testa .logo img { height: 40px; width: auto; }
+  .modo { margin-left: auto; display: inline-flex; background: var(--tufo-chiaro); border: 2px solid var(--forno); border-radius: 999px; padding: 3px; }
+  .modo button { border: 0; background: transparent; padding: 7px 16px; border-radius: 999px; font-weight: 700; font-size: 15px; cursor: pointer; }
+  .modo button[aria-pressed="true"] { background: var(--forno); color: var(--tufo-chiaro); }
+  .modo button[disabled] { opacity: .4; cursor: not-allowed; }
+  .categorie { max-width: 1240px; margin: 0 auto; padding: 0 16px 10px; display: flex; gap: 8px; overflow-x: auto; scrollbar-width: none; }
+  .categorie::-webkit-scrollbar { display: none; }
+  .categorie a { flex: none; text-decoration: none; padding: 6px 14px; border-radius: 999px; font-weight: 600; font-size: 15px; border: 1.5px solid transparent; }
+  .categorie a.attiva { border-color: var(--forno); background: var(--tufo-chiaro); }
+  .avviso { max-width: 1240px; margin: 14px auto 0; padding: 0 16px; }
+  .avviso div { border-radius: var(--radius); padding: 12px 16px; font-weight: 600; background: var(--tufo); }
+  .avviso div.no { background: #fbe1d4; color: #7a2504; }
+
+  .layout { max-width: 1240px; margin: 0 auto; padding: 18px 16px 120px; display: grid; grid-template-columns: 1fr 380px; gap: 34px; align-items: start; }
+  .cerca { position: relative; margin-bottom: 8px; }
+  .cerca input { width: 100%; height: 50px; border-radius: 999px; border: 1.5px solid var(--linea); padding: 0 18px 0 46px; background: #fff; font-size: 16px; }
+  .cerca svg { position: absolute; left: 16px; top: 15px; width: 20px; height: 20px; }
+  .cat { scroll-margin-top: 130px; padding-top: 26px; }
+  .cat h2 { font-size: 34px; }
+  .cat > p { color: var(--muted); margin-top: 4px; }
+  .prodotti { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .prod { display: flex; gap: 14px; text-align: left; width: 100%; background: #fff; border: 1.5px solid var(--linea); border-radius: var(--radius); padding: 14px; cursor: pointer; transition: border-color .15s; }
+  .prod:hover { border-color: var(--forno); }
+  .prod .corpo { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .prod h3 { font-family: var(--text); font-weight: 700; font-size: 17px; }
+  .prod .ing { color: var(--muted); font-size: 14.5px; line-height: 1.4; margin-top: 3px; }
+  .prod .piede { margin-top: auto; padding-top: 10px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .prod .prezzo { font-weight: 800; margin-right: auto; font-variant-numeric: tabular-nums; }
+  .prod .piu { width: 36px; height: 36px; border-radius: 50%; background: var(--basilico); color: #fff; display: grid; place-items: center; font-size: 22px; font-weight: 700; flex: none; }
+  .prod img { width: 96px; height: 96px; object-fit: cover; border-radius: 10px; flex: none; }
+  .prod.finito { opacity: .55; cursor: not-allowed; }
+  .prod.finito .piu { background: #9a9283; }
+  .prod .qn { background: var(--forno); color: #fff; border-radius: 999px; font-size: 13px; font-weight: 800; padding: 1px 9px; }
+  @media (max-width: 1000px) { .layout { grid-template-columns: 1fr; } .prodotti { grid-template-columns: 1fr; } }
+
+  /* Carrello */
+  .carrello { position: sticky; top: 130px; background: #fff; border: 2px solid var(--forno); border-radius: 18px; padding: 18px; max-height: calc(100vh - 150px); display: flex; flex-direction: column; }
+  .carrello h2 { font-size: 28px; }
+  .righe { overflow-y: auto; margin: 12px -4px 0; padding: 0 4px; flex: 1; }
+  .riga { display: grid; grid-template-columns: auto 1fr auto; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--linea); align-items: start; }
+  .riga .q { display: inline-flex; align-items: center; border: 1.5px solid var(--linea); border-radius: 999px; }
+  .riga .q button { width: 30px; height: 30px; border: 0; background: none; font-size: 18px; font-weight: 700; cursor: pointer; }
+  .riga .q span { min-width: 18px; text-align: center; font-weight: 700; font-size: 15px; }
+  .riga .nome { font-weight: 700; font-size: 15.5px; }
+  .riga .mod { font-size: 13.5px; color: var(--muted); }
+  .riga .tot { font-weight: 700; font-variant-numeric: tabular-nums; font-size: 15px; }
+  .vuoto { color: var(--muted); padding: 18px 0; }
+  .somme { margin-top: 12px; font-variant-numeric: tabular-nums; }
+  .somme div { display: flex; justify-content: space-between; padding: 2px 0; font-size: 15px; }
+  .somme .totale { font-size: 20px; font-weight: 800; padding-top: 8px; }
+  .somme .nota { font-size: 13.5px; color: var(--muted); display: block; }
+  .carrello .btn { width: 100%; margin-top: 14px; }
+  .barra-mobile { display: none; }
+  @media (max-width: 1000px) {
+    .carrello { display: none; }
+    .barra-mobile { display: block; position: fixed; left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); z-index: 40; }
+    .barra-mobile button { width: 100%; justify-content: space-between; box-shadow: 0 10px 30px -8px rgba(0,0,0,.5); }
+  }
+
+  /* Pannelli */
+  dialog { border: 0; padding: 0; border-radius: 20px; width: min(560px, calc(100vw - 24px)); max-height: calc(100dvh - 24px); background: var(--carta); color: var(--forno); }
+  dialog::backdrop { background: rgba(20, 15, 5, .55); }
+  @media (max-width: 640px) { dialog { width: 100vw; max-width: 100vw; margin: auto 0 0; border-radius: 20px 20px 0 0; max-height: 92dvh; } }
+  .dlg { display: flex; flex-direction: column; max-height: inherit; }
+  .dlg-testa { padding: 18px 20px 6px; display: flex; gap: 12px; align-items: start; }
+  .dlg-testa h2 { font-size: 28px; flex: 1; }
+  .chiudi { width: 40px; height: 40px; border-radius: 50%; border: 1.5px solid var(--linea); background: #fff; font-size: 20px; cursor: pointer; flex: none; }
+  .dlg-corpo { padding: 6px 20px 16px; overflow-y: auto; }
+  .dlg-piede { padding: 14px 20px calc(16px + env(safe-area-inset-bottom)); border-top: 1px solid var(--linea); display: flex; gap: 12px; align-items: center; background: #fff; }
+  .dlg-piede .btn { flex: 1; }
+  .gruppo { margin-top: 18px; }
+  .gruppo > h3 { font-family: var(--text); font-weight: 700; font-size: 16px; margin-bottom: 8px; }
+  .gruppo > p.aiuto { font-size: 14px; color: var(--muted); margin: -4px 0 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { position: relative; }
+  .chip input { position: absolute; opacity: 0; inset: 0; cursor: pointer; }
+  .chip span { display: inline-block; padding: 7px 14px; border: 1.5px solid var(--linea); border-radius: 999px; background: #fff; font-size: 15px; font-weight: 600; }
+  .chip input:checked + span { background: var(--forno); color: #fff; border-color: var(--forno); }
+  .chip.togli input:checked + span { background: #fbe1d4; color: #7a2504; border-color: #e8a585; text-decoration: line-through; }
+  .chip input:focus-visible + span { outline: 3px solid var(--basilico); outline-offset: 2px; }
+  .campo { display: block; margin-top: 14px; }
+  .campo > span { display: block; font-weight: 700; font-size: 15px; margin-bottom: 6px; }
+  .campo input, .campo select, .campo textarea { width: 100%; min-height: 48px; border: 1.5px solid rgba(0,0,0,.25); border-radius: 12px; padding: 10px 14px; background: #fff; font-size: 16px; }
+  .campo textarea { min-height: 76px; resize: vertical; }
+  .campo input:focus, .campo select:focus, .campo textarea:focus { border-color: var(--forno); outline: none; box-shadow: 0 0 0 3px rgba(31,81,50,.25); }
+  .doppio { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  @media (max-width: 480px) { .doppio { grid-template-columns: 1fr; } }
+  .stepper { display: inline-flex; align-items: center; border: 2px solid var(--forno); border-radius: 999px; }
+  .stepper button { width: 44px; height: 44px; border: 0; background: none; font-size: 22px; font-weight: 700; cursor: pointer; }
+  .stepper output { min-width: 26px; text-align: center; font-weight: 800; }
+  .scelta { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .scelta label { position: relative; border: 2px solid var(--linea); border-radius: 12px; padding: 12px 14px; cursor: pointer; background: #fff; }
+  .scelta label:has(input:checked) { border-color: var(--forno); box-shadow: inset 0 0 0 1px var(--forno); }
+  .scelta input { position: absolute; opacity: 0; }
+  .scelta strong { display: block; }
+  .scelta small { color: var(--muted); font-size: 13.5px; }
+  .scelta label:has(input:disabled) { opacity: .45; cursor: not-allowed; }
+  .scelta label:has(input:focus-visible) { outline: 3px solid var(--basilico); outline-offset: 2px; }
+  .errore { background: #fbe1d4; color: #7a2504; border-radius: 12px; padding: 10px 14px; font-weight: 600; margin-top: 14px; }
+  .consenso { display: flex; gap: 10px; align-items: start; margin-top: 16px; font-size: 14.5px; }
+  .consenso input { width: 20px; height: 20px; margin-top: 2px; flex: none; accent-color: var(--basilico); }
+</style>
+</head>
+<body>
+<header class="testa">
+  <div class="in">
+    <a class="logo" href="/" aria-label="Torna alla pagina iniziale"><img src="/assets/logo.svg" alt="Fera's Pizza_Lab" width="119" height="40"></a>
+    <div class="modo" role="group" aria-label="Tipo di ordine">
+      <button type="button" data-modo="takeaway" aria-pressed="true">Asporto</button>
+      <button type="button" data-modo="delivery" aria-pressed="false">Consegna</button>
+    </div>
+  </div>
+  <nav class="categorie" id="nav-cat" aria-label="Categorie del menu"></nav>
+</header>
+
+<div class="avviso" id="avviso" hidden><div></div></div>
+
+<div class="layout">
+  <main>
+    <label class="cerca"><span class="sr-only">Cerca nel menu</span>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <input type="search" id="cerca" placeholder="Cerca una pizza o un ingrediente" autocomplete="off">
+    </label>
+    <div id="menu"><p class="vuoto">Carico il menu…</p></div>
+  </main>
+  <aside class="carrello" aria-labelledby="t-carrello">
+    <h2 id="t-carrello">Il tuo ordine</h2>
+    <div class="righe" id="righe"></div>
+    <div class="somme" id="somme"></div>
+    <button class="btn btn-primary" type="button" id="vai-cassa" disabled>Completa l'ordine</button>
+  </aside>
+</div>
+
+<div class="barra-mobile"><button class="btn btn-primary" type="button" id="apri-carrello" hidden><span id="bm-n"></span><span id="bm-tot"></span></button></div>
+
+<dialog id="dlg-prodotto" aria-labelledby="dp-titolo">
+  <form class="dlg" method="dialog" id="form-prodotto">
+    <div class="dlg-testa"><h2 id="dp-titolo"></h2><button class="chiudi" type="button" data-chiudi aria-label="Chiudi">✕</button></div>
+    <div class="dlg-corpo" id="dp-corpo"></div>
+    <div class="dlg-piede">
+      <div class="stepper"><button type="button" id="dp-meno" aria-label="Una in meno">−</button><output id="dp-q">1</output><button type="button" id="dp-piu" aria-label="Una in più">+</button></div>
+      <button class="btn btn-primary" type="submit" id="dp-aggiungi">Aggiungi</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlg-carrello" aria-labelledby="dc-titolo">
+  <div class="dlg">
+    <div class="dlg-testa"><h2 id="dc-titolo">Il tuo ordine</h2><button class="chiudi" type="button" data-chiudi aria-label="Chiudi">✕</button></div>
+    <div class="dlg-corpo"><div class="righe" id="righe-m"></div><div class="somme" id="somme-m"></div></div>
+    <div class="dlg-piede"><button class="btn btn-primary" type="button" id="vai-cassa-m">Completa l'ordine</button></div>
+  </div>
+</dialog>
+
+<dialog id="dlg-cassa" aria-labelledby="dk-titolo">
+  <form class="dlg" id="form-cassa" novalidate>
+    <div class="dlg-testa"><h2 id="dk-titolo">Completa l'ordine</h2><button class="chiudi" type="button" data-chiudi aria-label="Chiudi">✕</button></div>
+    <div class="dlg-corpo">
+      <div class="gruppo">
+        <h3>Come vuoi riceverlo?</h3>
+        <div class="scelta" id="k-tipo">
+          <label><input type="radio" name="tipo" value="takeaway"><strong>Asporto</strong><small>Ritiri in Corso Butera</small></label>
+          <label><input type="radio" name="tipo" value="delivery"><strong>Consegna</strong><small id="k-consegna-info">A domicilio</small></label>
+        </div>
+      </div>
+      <label class="campo"><span id="k-orario-label">Orario di ritiro</span><select name="slot" id="k-slot" required></select></label>
+      <div class="doppio">
+        <label class="campo"><span>Nome</span><input name="name" autocomplete="name" required maxlength="80"></label>
+        <label class="campo"><span>Telefono</span><input name="phone" type="tel" autocomplete="tel" inputmode="tel" required maxlength="25" placeholder="Es. 333 1234567"></label>
+      </div>
+      <label class="campo" id="k-indirizzo-campo" hidden><span>Indirizzo di consegna</span><input name="address" autocomplete="street-address" maxlength="200" placeholder="Via, numero civico, citofono"></label>
+      <label class="campo"><span>Note per il locale <small style="font-weight:400">(facoltative)</small></span><textarea name="notes" maxlength="500" placeholder="Allergie, citofono, piano…"></textarea></label>
+      <div class="gruppo">
+        <h3>Pagamento</h3>
+        <p class="aiuto">Paghi al ritiro o al fattorino.</p>
+        <div class="scelta" id="k-pag">
+          <label><input type="radio" name="payment" value="contanti"><strong>Contanti</strong><small>Al ritiro o alla consegna</small></label>
+          <label><input type="radio" name="payment" value="pos"><strong>Carta</strong><small>Con POS al ritiro o alla consegna</small></label>
+        </div>
+      </div>
+      <div class="somme" id="k-somme"></div>
+      <label class="consenso"><input type="checkbox" name="privacy" required><span>Ho letto l'<a href="/privacy" target="_blank">informativa privacy</a>: nome, telefono e indirizzo servono solo a preparare e consegnare l'ordine.</span></label>
+      <div class="errore" id="k-errore" role="alert" hidden></div>
+    </div>
+    <div class="dlg-piede"><button class="btn btn-primary" type="submit" id="k-invia">Invia l'ordine</button></div>
+  </form>
+</dialog>
+
+<script>
+(() => {
+const $ = (s, el = document) => el.querySelector(s);
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const euro = (c) => (c / 100).toLocaleString("it-IT", { style: "currency", currency: "EUR" });
+const store = {
+  get(k, d) { try { return JSON.parse(localStorage.getItem("feras:" + k)) ?? d; } catch { return d; } },
+  set(k, v) { try { localStorage.setItem("feras:" + k, JSON.stringify(v)); } catch {} },
+};
+
+let MENU = [], PRODS = new Map(), CFG = null, AV = null;
+let cart = store.get("cart", []);
+let modo = store.get("modo", "takeaway");
+
+function lineKey(l) { return [l.productId, [...l.removed].sort().join("|"), [...l.extras].sort().join("|"), l.note || ""].join("#"); }
+function unitOf(l) {
+  const p = PRODS.get(l.productId); if (!p) return 0;
+  return p.price_cents + l.extras.reduce((s, n) => s + ((p._cat.extras.find((e) => e.name === n) || {}).price_cents || 0), 0);
+}
+function totals() {
+  const s = CFG?.settings || {};
+  const sub = cart.reduce((t, l) => t + unitOf(l) * l.qty, 0);
+  const disc = Math.round(sub * (s.online_discount_percent || 0) / 100);
+  let fee = 0, mancano = 0;
+  if (modo === "delivery") {
+    fee = s.free_delivery_over_cents > 0 && sub >= s.free_delivery_over_cents ? 0 : (s.delivery_fee_cents || 0);
+    mancano = Math.max(0, (s.delivery_min_cents || 0) - sub);
+  }
+  return { sub, disc, fee, tot: sub - disc + fee, mancano, n: cart.reduce((t, l) => t + l.qty, 0) };
+}
+
+// ---------- Rendering menu ----------
+function renderMenu() {
+  const q = $("#cerca").value.trim().toLowerCase();
+  const html = MENU.map((c) => {
+    const items = c.products.filter((p) => !q || (p.name + " " + p.description).toLowerCase().includes(q));
+    if (!items.length) return "";
+    return `<section class="cat" id="cat-${c.id}" aria-labelledby="h-${c.id}">
+      <h2 id="h-${c.id}">${esc(c.name)}</h2>${c.description ? `<p>${esc(c.description)}</p>` : ""}
+      <div class="prodotti">${items.map((p) => {
+        const inCart = cart.filter((l) => l.productId === p.id).reduce((t, l) => t + l.qty, 0);
+        return `<button type="button" class="prod${p.available ? "" : " finito"}" data-id="${p.id}" ${p.available ? "" : 'aria-disabled="true"'}>
+          <span class="corpo"><h3>${esc(p.name)}</h3>${p.description ? `<span class="ing">${esc(p.description)}</span>` : ""}
+          <span class="piede"><span class="prezzo">${euro(p.price_cents)}</span>
+            ${p.tags.map((t) => `<span class="tag ${esc(t)}">${esc(t)}</span>`).join("")}
+            ${p.available ? "" : '<span class="tag">Terminato per oggi</span>'}
+            ${inCart ? `<span class="qn" aria-label="${inCart} nel carrello">${inCart}</span>` : ""}
+            <span class="piu" aria-hidden="true">+</span></span></span>
+          ${p.image ? `<img src="${esc(p.image)}" alt="" loading="lazy">` : ""}
+        </button>`;
+      }).join("")}</div></section>`;
+  }).join("");
+  $("#menu").innerHTML = html || `<p class="vuoto">Nessun prodotto corrisponde a "${esc(q)}".</p>`;
+}
+
+function renderNav() {
+  $("#nav-cat").innerHTML = MENU.map((c) => `<a href="#cat-${c.id}" data-cat="${c.id}">${esc(c.name)}</a>`).join("");
+  const links = [...document.querySelectorAll("#nav-cat a")];
+  const obs = new IntersectionObserver((entries) => {
+    entries.forEach((e) => {
+      if (!e.isIntersecting) return;
+      links.forEach((a) => a.classList.toggle("attiva", a.dataset.cat === e.target.id.slice(4)));
+      const act = links.find((a) => a.classList.contains("attiva"));
+      act?.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+    });
+  }, { rootMargin: "-140px 0px -60% 0px" });
+  document.querySelectorAll(".cat").forEach((s) => obs.observe(s));
+}
+
+function righeHtml() {
+  if (!cart.length) return `<p class="vuoto">Il carrello è vuoto. Tocca un prodotto per aggiungerlo.</p>`;
+  return cart.map((l, i) => {
+    const p = PRODS.get(l.productId);
+    const mods = [...l.removed.map((r) => "senza " + r), ...l.extras.map((e) => "+ " + e), ...(l.note ? ["“" + l.note + "”"] : [])];
+    return `<div class="riga">
+      <span class="q"><button type="button" data-meno="${i}" aria-label="Togli uno">−</button><span>${l.qty}</span><button type="button" data-piu="${i}" aria-label="Aggiungi uno">+</button></span>
+      <span><span class="nome">${esc(p?.name || "Prodotto non più disponibile")}</span>${mods.length ? `<span class="mod"><br>${esc(mods.join(", "))}</span>` : ""}</span>
+      <span class="tot">${euro(unitOf(l) * l.qty)}</span></div>`;
+  }).join("");
+}
+function sommeHtml() {
+  const t = totals(), s = CFG?.settings || {};
+  if (!cart.length) return "";
+  let h = `<div><span>Subtotale</span><span>${euro(t.sub)}</span></div>`;
+  if (t.disc) h += `<div><span>Sconto online ${s.online_discount_percent}%</span><span>−${euro(t.disc)}</span></div>`;
+  if (modo === "delivery") h += `<div><span>Consegna</span><span>${t.fee ? euro(t.fee) : "Gratis"}</span></div>`;
+  h += `<div class="totale"><span>Totale</span><span>${euro(t.tot)}</span></div>`;
+  if (t.mancano > 0) h += `<span class="nota">Per la consegna mancano ${euro(t.mancano)} al minimo d'ordine.</span>`;
+  return h;
+}
+function renderCart() {
+  store.set("cart", cart);
+  for (const [r, s] of [["#righe", "#somme"], ["#righe-m", "#somme-m"]]) { $(r).innerHTML = righeHtml(); $(s).innerHTML = sommeHtml(); }
+  const t = totals();
+  const ok = cart.length && AV?.accepting && !(modo === "delivery" && t.mancano > 0);
+  $("#vai-cassa").disabled = $("#vai-cassa-m").disabled = !ok;
+  $("#apri-carrello").hidden = !cart.length;
+  $("#bm-n").textContent = `Vedi l'ordine (${t.n})`;
+  $("#bm-tot").textContent = euro(t.tot);
+  renderMenu();
+}
+function changeQty(i, d) {
+  cart[i].qty += d;
+  if (cart[i].qty <= 0) cart.splice(i, 1);
+  renderCart();
+}
+document.addEventListener("click", (e) => {
+  const m = e.target.closest("[data-meno]"), p = e.target.closest("[data-piu]");
+  if (m) changeQty(Number(m.dataset.meno), -1);
+  if (p) changeQty(Number(p.dataset.piu), 1);
+  const c = e.target.closest("[data-chiudi]");
+  if (c) c.closest("dialog").close();
+});
+document.querySelectorAll("dialog").forEach((d) => d.addEventListener("click", (e) => { if (e.target === d) d.close(); }));
+
+// ---------- Modo asporto / consegna ----------
+function setModo(m) {
+  if (m === "delivery" && !CFG?.settings.delivery_enabled) m = "takeaway";
+  if (m === "takeaway" && !CFG?.settings.takeaway_enabled && CFG?.settings.delivery_enabled) m = "delivery";
+  modo = m; store.set("modo", m);
+  document.querySelectorAll("[data-modo]").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.modo === m)));
+  renderCart();
+}
+document.querySelectorAll("[data-modo]").forEach((b) => b.addEventListener("click", () => setModo(b.dataset.modo)));
+
+// ---------- Dialog prodotto ----------
+let current = null, dq = 1;
+$("#menu").addEventListener("click", (e) => {
+  const b = e.target.closest(".prod"); if (!b || b.classList.contains("finito")) return;
+  openProduct(PRODS.get(Number(b.dataset.id)));
+});
+function openProduct(p) {
+  current = p; dq = 1; $("#dp-q").textContent = "1";
+  $("#dp-titolo").textContent = p.name;
+  let h = p.description ? `<p style="color:var(--muted)">${esc(p.description)}</p>` : "";
+  if (p.image) h = `<img src="${esc(p.image)}" alt="" style="width:100%;border-radius:14px;margin-bottom:12px;aspect-ratio:4/3;object-fit:cover">` + h;
+  if (p.ingredients.length > 1) h += `<div class="gruppo"><h3>Vuoi togliere qualcosa?</h3><div class="chips">${p.ingredients.map((g) =>
+    `<label class="chip togli"><input type="checkbox" name="rem" value="${esc(g)}"><span>${esc(g)}</span></label>`).join("")}</div></div>`;
+  if (p._cat.extras.length) h += `<div class="gruppo"><h3>Aggiunte</h3><div class="chips">${p._cat.extras.map((x) =>
+    `<label class="chip"><input type="checkbox" name="ext" value="${esc(x.name)}"><span>${esc(x.name)} +${euro(x.price_cents)}</span></label>`).join("")}</div></div>`;
+  h += `<label class="campo"><span>Nota per la cucina <small style="font-weight:400">(facoltativa)</small></span><input name="nota" maxlength="140" placeholder="Es. ben cotta, tagliata a spicchi"></label>`;
+  $("#dp-corpo").innerHTML = h;
+  updAdd();
+  $("#dp-corpo").onchange = updAdd;
+  $("#dlg-prodotto").showModal();
+}
+function picked() {
+  const f = $("#form-prodotto");
+  return {
+    removed: [...f.querySelectorAll("[name=rem]:checked")].map((i) => i.value),
+    extras: [...f.querySelectorAll("[name=ext]:checked")].map((i) => i.value),
+    note: (f.querySelector("[name=nota]")?.value || "").trim(),
+  };
+}
+function updAdd() {
+  const l = { productId: current.id, qty: dq, ...picked() };
+  $("#dp-aggiungi").textContent = "Aggiungi · " + euro(unitOf(l) * dq);
+}
+$("#dp-meno").onclick = () => { dq = Math.max(1, dq - 1); $("#dp-q").textContent = dq; updAdd(); };
+$("#dp-piu").onclick = () => { dq = Math.min(30, dq + 1); $("#dp-q").textContent = dq; updAdd(); };
+$("#form-prodotto").addEventListener("submit", (e) => {
+  e.preventDefault();
+  const l = { productId: current.id, qty: dq, ...picked() };
+  const same = cart.find((x) => lineKey(x) === lineKey(l));
+  if (same) same.qty += dq; else cart.push(l);
+  $("#dlg-prodotto").close();
+  renderCart();
+});
+$("#apri-carrello").onclick = () => $("#dlg-carrello").showModal();
+
+// ---------- Cassa ----------
+const form = $("#form-cassa");
+const F = form.elements;
+function fillSlots() {
+  const tipo = F.tipo.value || modo;
+  const slots = AV.slots[tipo] || [];
+  const prev = F.slot.value;
+  F.slot.innerHTML = slots.length ? slots.map((s) => `<option${s === prev ? " selected" : ""}>${s}</option>`).join("") : `<option value="">Nessun orario disponibile oggi</option>`;
+  $("#k-orario-label").textContent = tipo === "delivery" ? "Orario di consegna" : "Orario di ritiro";
+  $("#k-indirizzo-campo").hidden = tipo !== "delivery";
+  F.address.required = tipo === "delivery";
+}
+async function openCheckout() {
+  await loadConfig();
+  $("#dlg-carrello").close();
+  const s = CFG.settings;
+  form.querySelector("[name=tipo][value=takeaway]").disabled = !s.takeaway_enabled || !AV.slots.takeaway.length;
+  form.querySelector("[name=tipo][value=delivery]").disabled = !s.delivery_enabled || !AV.slots.delivery.length;
+  $("#k-consegna-info").textContent = s.delivery_enabled ? (s.delivery_fee_cents ? "Costo " + euro(s.delivery_fee_cents) : "Gratuita") : "Non disponibile";
+  form.querySelector("[name=payment][value=contanti]").closest("label").hidden = !s.payment_cash;
+  form.querySelector("[name=payment][value=pos]").closest("label").hidden = !s.payment_pos;
+  const r = form.querySelector(`[name=tipo][value=${modo}]`);
+  if (r.disabled) { const alt = form.querySelector("[name=tipo]:not(:disabled)"); if (alt) { alt.checked = true; setModo(alt.value); } }
+  else r.checked = true;
+  if (!F.payment.value) form.querySelector(`[name=payment][value=${s.payment_cash ? "contanti" : "pos"}]`).checked = true;
+  const saved = store.get("cliente", {});
+  for (const k of ["name", "phone", "address"]) if (!F[k].value && saved[k]) F[k].value = saved[k];
+  fillSlots();
+  $("#k-somme").innerHTML = sommeHtml();
+  $("#k-errore").hidden = true;
+  $("#dlg-cassa").showModal();
+}
+$("#vai-cassa").onclick = openCheckout;
+$("#vai-cassa-m").onclick = openCheckout;
+form.addEventListener("change", (e) => {
+  if (e.target.name === "tipo") { setModo(e.target.value); fillSlots(); $("#k-somme").innerHTML = sommeHtml(); }
+});
+function fail(msg) { const el = $("#k-errore"); el.textContent = msg; el.hidden = false; el.scrollIntoView({ block: "nearest" }); }
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const tipo = F.tipo.value;
+  if (!tipo) return fail("Scegli asporto o consegna.");
+  if (!F.slot.value) return fail("Oggi non ci sono più orari disponibili.");
+  if (F.name.value.trim().length < 2) { F.name.focus(); return fail("Inserisci il tuo nome."); }
+  if (F.phone.value.replace(/\D/g, "").length < 6) { F.phone.focus(); return fail("Inserisci un numero di telefono valido: ti chiamiamo solo se serve."); }
+  if (tipo === "delivery" && F.address.value.trim().length < 5) { F.address.focus(); return fail("Inserisci l'indirizzo di consegna con il numero civico."); }
+  if (tipo === "delivery" && totals().mancano > 0) return fail(`Per la consegna mancano ${euro(totals().mancano)} al minimo d'ordine.`);
+  if (!F.payment.value) return fail("Scegli come pagare.");
+  if (!F.privacy.checked) return fail("Conferma di aver letto l'informativa privacy.");
+  const btn = $("#k-invia"); btn.disabled = true; btn.textContent = "Invio in corso…";
+  try {
+    const res = await fetch("/api/orders", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        orderType: tipo, slot: F.slot.value, name: F.name.value, phone: F.phone.value,
+        address: tipo === "delivery" ? F.address.value : "", notes: F.notes.value, payment: F.payment.value,
+        items: cart.map((l) => ({ productId: l.productId, qty: l.qty, removed: l.removed, extras: l.extras, note: l.note })),
+      }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok || !data.ok) { await loadConfig(); fillSlots(); throw new Error(data.error || "Ordine non inviato. Riprova o chiamaci."); }
+    store.set("cliente", { name: F.name.value.trim(), phone: F.phone.value.trim(), address: F.address.value.trim() });
+    const storico = store.get("ordini", []); storico.unshift({ id: data.id, t: data.token, n: data.number, at: Date.now() }); store.set("ordini", storico.slice(0, 10));
+    cart = []; store.set("cart", []);
+    location.href = `/ordine?id=${encodeURIComponent(data.id)}&t=${encodeURIComponent(data.token)}`;
+  } catch (err) {
+    fail(err.message || "Connessione assente. Riprova.");
+    btn.disabled = false; btn.textContent = "Invia l'ordine";
+  }
+});
+
+// ---------- Caricamento ----------
+async function loadConfig() {
+  CFG = await (await fetch("/api/config")).json();
+  AV = CFG.availability;
+  const s = CFG.settings, box = $("#avviso");
+  let msg = "", no = false;
+  if (AV.paused) { msg = s.pause_message; no = true; }
+  else if (!AV.accepting) { msg = "Per oggi gli ordini online sono chiusi. Puoi comunque sfogliare il menu."; no = true; }
+  else if (!AV.openNow) msg = `Apriamo alle ${AV.todayHours[0]?.[0] || ""}: puoi già ordinare per stasera.`;
+  if (s.announcement && !no) msg = s.announcement + (msg ? " · " + msg : "");
+  if (s.online_discount_percent > 0 && !no) msg = (msg ? msg + " · " : "") + `Sconto del ${s.online_discount_percent}% ordinando online.`;
+  box.hidden = !msg; box.firstElementChild.textContent = msg; box.firstElementChild.className = no ? "no" : "";
+  document.querySelector('[data-modo="delivery"]').disabled = !s.delivery_enabled;
+  document.querySelector('[data-modo="takeaway"]').disabled = !s.takeaway_enabled;
+}
+Promise.all([fetch("/api/menu").then((r) => r.json()), loadConfig()]).then(([menu]) => {
+  MENU = menu;
+  for (const c of MENU) for (const p of c.products) { p._cat = c; PRODS.set(p.id, p); }
+  cart = cart.filter((l) => PRODS.get(l.productId)?.available && l.qty > 0);
+  renderNav(); setModo(modo);
+}).catch(() => { $("#menu").innerHTML = `<p class="vuoto">Menu non disponibile. Controlla la connessione e ricarica la pagina.</p>`; });
+$("#cerca").addEventListener("input", renderMenu);
+})();
+</script>
+</body>
+</html>
